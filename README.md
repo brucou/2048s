@@ -25,3 +25,5 @@ Writing down for myself and others some good practices for software development.
   - Essentially, we iterate on the page till we are happy.
 
 # Implementation
+- HTML boilerplate: https://www.freecodecamp.org/news/basic-html5-template-boilerplate-code-example/
+- 
