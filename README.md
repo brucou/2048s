@@ -18,6 +18,7 @@ Let's see how far we can go.
 # Functional requirements for this branch
 - Rules of the original 2048 game: https://www.baeldung.com/cs/2048-algorithm
 - When the user comes to the game web page, it sees an initial screen with an empty board, a new game button, the best score so far -> https://classic.play2048.co/
+- When user starts the game, he sees initial board with two 2/4 screen 10% probability, and a restart game button and a score initialized to 0
 
 # Approach
 - Implementation
