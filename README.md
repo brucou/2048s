@@ -2,7 +2,9 @@
 Variations, musings, and learning good practices through the 2048 game
 
 # Why
-Writing down for myself and others some good practices for software development. Let's see how far this goes.
+Writing down for myself and others some good practices for software development. Rather than abstractly list principles, everything will be derived from the specification and implementation of an actual application. Not too easy, not too hard, not too ugly, not too pretty. We are not necessarily looking into making a top-notch app but rather identifying common issues in software development, and common solutions, and the rationale behind them. 
+
+Let's see how far we can go.
 
 # HL requirement for this branch
 
@@ -16,23 +18,33 @@ Writing down for myself and others some good practices for software development.
 
 # Approach
 - Implementation
-  - displaying  the web page will naturally happen as a result of publishing the page on a web server
+  - Displaying  the web page will naturally happen as a result of publishing the page on a web server. We use GitHub pages for this purpose.
   - The simplest at this stage is to implement the page with a mix of HTML and CSS, no JavaScript being necessary so far.
   - The CSS rules should be in a separate file
     - ADR: rules could be inlined in the HTML too (e.g., tailwind) but we decide against that as we anticipate wanting to iterate on the CSS rules and the simplest will be to isolate the CSS. Also we may use AI or we may use rules from other helper sites (e.g. StackOverflow) and we do not want to tie our hand with a CSS framework so early in the game. The underlying principle is to do the fastest simplest thing that works and refactor later.
 - Tests:
-  - At this stage, given that we don't really have closed requirements for the initial screen, we will use manual visual testing rather than automated testing.
-  - Essentially, we iterate on the page till we are happy.
+  - At this stage, we don't really have closed requirements for the initial screen. We will then postpone automated tests till we have some stability in those requirements. Because change in requirements means change in test cases, we will test only those requirements that are likely not to change, or that are key to the application usability. This is in order not to commit engineering efforts that provide short-lived value.
+  - We will use manual visual testing for those requirements that are likely to change.
+  - Essentially, we iterate on the page till we are happy enough.
 
 # Implementation
+- Publishing in GitHub pages: https://medium.com/@itspaulolimahimself/deploying-a-react-js-spa-app-to-github-pages-58ddaa2897a3
 - HTML boilerplate: https://www.freecodecamp.org/news/basic-html5-template-boilerplate-code-example/
 - Flexbox playground: https://flexbox-seven.vercel.app/, https://flexbox.tech/, https://www.flexbox.fun/app
-- Copilot bing.com
-- Publishing though GitHub pages!!! -> https://brucou.github.io/2048s/
+- Copilot -> bing.com
+- Published -> https://brucou.github.io/2048s/
 
-# Test
-- Results are acceptable enough not to block progressing with the rest of the requirements. However, some defaults are visible
-- For now, only adjusted down the dimensions of the cells so the board fits in one screen (assuming 1360x720 res)
+# Tests
+Following manual visual testing:
+- Results are acceptable enough not to block progressing with the rest of the requirements. However, some defaults are visible and left for later
+  - homogeneity of font, color, vertical spacing
+  - some padding around score may make it look nicer
+- For now, only adjusted down the dimensions of the cells so the board fits in one screen (assuming 1360x768 res)
+
+# Room for improvement
+- there are some dependencies within the CSS that are not visible in the code
+  - width of app is tied to the size of the cells of the board (100px cell -> 450px app, 80 -> 390)
+  - esthetically pleasing vertical spacing is likely to depend on font size and should follow a scale
 
 # Lessons learnt
 ## CSS
