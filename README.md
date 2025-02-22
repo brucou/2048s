@@ -22,45 +22,68 @@ Let's see how far we can go.
 
 # Approach
 - Implementation
-  - Displaying  the web page will naturally happen as a result of publishing the page on a web server. We use GitHub pages for this purpose.
-  - The simplest at this stage is to implement the page with a mix of HTML and CSS, no JavaScript being necessary so far.
-  - The CSS rules should be in a separate file
-    - ADR: rules could be inlined in the HTML too (e.g., tailwind) but we decide against that as we anticipate wanting to iterate on the CSS rules and the simplest will be to isolate the CSS. Also we may use AI or we may use rules from other helper sites (e.g. StackOverflow) and we do not want to tie our hand with a CSS framework so early in the game. The underlying principle is to do the fastest simplest thing that works and refactor later.
+  - we are going to need JavaScript now to handle the click on the "new game" button
+  - Handler placed on button goes like this:
+    - randomly pick two numbers (10% chance a 4, 90$ chance a 2)
+    - randomly pick two **distinct** locations on the board (there are such 2, we have 4x4 empty cells)
+    - define those 10/90 as constant
+    - define the list of values to pick from (2,4) as constant too
+    - display the chosen number in the chosen locations
+
+- Design:
+  - Pure function get_seeded_random_generator (seed)
+    - ADR: we chose seedable random generator to make it easier to test functions who use random generation
+    - for now, set the seed to Math.random()
+    - see what AI recommends as code or library
+  - Pure function get_starting_cells(seeded_random_generator):
+    - Note: function is pure because the seeded random generator will always generate the same list of values as determined from its seed
+    - get two random integer numbers between 0 and 100, 0 <= x < 10 -> cell has a 4, 10 <= x, cell has a 2
+    - get two random integer numbers between 0 and X, with X > size of board = 16 (so every cell is reachable!)
+      - the cell coordinate X will be the number mod 4, i.e. integer number = 14 => cell position = 2; integer number = 15 => cell number = 4
+      - the cell coordinate Y will be the number mod 16 div 4
+        - with div(x,y) = Math.trunc(x/y) so that x === div(x, y) * y + x % y
+      - NOTE: (0,0) is the top left corner of the board, (3,3) is the bottom right corner of the board
+      - NOTE: Because all cells are initially empty, the chosen locations are necessarily free
+      - if both numbers are the same, rinse and repeat! (the probability of that is vanishingly small but non zero and we need to handle it)
+  - Impure function (DOM read, DOM write) set_up_initial_board([number, x, y], [number, x, y])
+    - For each of the two parameters:
+      - Find the selector for the DOM element to be updated (coordinates are x,y)
+      - Update that selector so it displays the number
+
 - Tests:
-  - At this stage, we don't really have closed requirements for the initial screen. We will then postpone automated tests till we have some stability in those requirements. Because change in requirements means change in test cases, we will test only those requirements that are likely not to change, or that are key to the application usability. This is in order not to commit engineering efforts that provide short-lived value.
-  - We will use manual visual testing for those requirements that are likely to change.
-  - Essentially, we iterate on the page till we are happy enough.
+  - get_starting_cells
+    -  we will pass a custom made seeded random generator
+    -  we will run it 100 times
+    -  we will fail the test if the number of 2 < ??.
+    -  Let's ask AI :-)
 
 # Implementation
-- Publishing in GitHub pages: https://medium.com/@itspaulolimahimself/deploying-a-react-js-spa-app-to-github-pages-58ddaa2897a3
-- HTML boilerplate: https://www.freecodecamp.org/news/basic-html5-template-boilerplate-code-example/
-- Flexbox playground: https://flexbox-seven.vercel.app/, https://flexbox.tech/, https://www.flexbox.fun/app
-- Copilot -> bing.com
-- Published -> https://brucou.github.io/2048s/
+- One optimization is to use a single generated float number for stating cell locations, and use its truncation when multiplied by X and X*10
+  - this may be faster assuming that the cost of generating a random number is largely above that of multiplying and truncating
+  - we won't do that though, as we don't know that, and there is no need for such an early optimization
+
+Patterns:
+- no early optimization
+- explicitly name core constants
+- design for testing
+  - use pure functions as much as possible
+
 
 # Tests
-Following manual visual testing:
-- Results are acceptable enough not to block progressing with the rest of the requirements. However, some defaults are visible and left for later
-  - homogeneity of font, color, vertical spacing
-  - some padding around score may make it look nicer
-- For now, only adjusted down the dimensions of the cells so the board fits in one screen (assuming 1360x768 res)
+...
 
 # Screenshots
-![Initial screen](./2048s%20-%20initial%20screen.png)
 
 # Room for improvement
-- There are some dependencies within the CSS that are not visible in the code
-  - width of app is tied to the size of the cells of the board (100px cell -> 450px app, 80 -> 390)
-  - esthetically pleasing vertical spacing is likely to depend on font size and should follow a scale
+.
 
 # Lessons learnt
 ## CSS
-- Firefox has the best tooling ever for flexbox debugging (used version 95.0b12 (64-bit))
-- don't use font size in tags where no text is displayed
-  - use font-size: 24px at parent level and that caused children height to be higher than expected (because of line height of font in parent, even when the font size was overriden in the child)
-- use margin bottom and right always when needed, don't use margin left and top. Margin collapsing is a nightmare to reason about. This avoid collapsing ever happening.
-- vertical spacing quickly feels arbitrary. A scale or some vertical spacing strategy and a grid would help a lot.
+
+## JS
+- Be careful when manipulating random generator
+  - use the randomness algorithm that fits: for a game there is no need for crytography-grade random generation
+  - beware that when rounding random floats to integer for instance to generate integers in a given interval, there is a small but non-zero likelihood that two subsequent generated numbers will be the same. It may not matter but if it does, act accordingly.
 
 ## AI
-- Copilot did not do too bad a job. It is likely that the entire styles could have been determined by iterating on it. Worth trying with instructions like "a little bit higher there, a little bit more vertical space between this and that" and see if it changes completely the structure or continue to use flex
-
+- ..
