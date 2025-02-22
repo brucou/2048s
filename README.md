@@ -2,7 +2,10 @@
 Variations, musings, and learning good practices through the 2048 game
 
 # Why
-Writing down for myself and others some good practices for software development. Rather than abstractly list principles, everything will be derived from the specification and implementation of an actual application. Not too easy, not too hard, not too ugly, not too pretty. We are not necessarily looking into making a top-notch app but rather identifying common issues in software development, and common solutions, and the rationale behind them. 
+Writing down for myself and others some good practices for software development. Rather than abstractly list principles, everything will be derived from the specification and implementation of an actual application. Not too easy, not too hard, not too ugly, not too pretty. 
+
+- We are not necessarily looking into making a top-notch app but rather identifying common issues in software development, and common solutions, and the rationale behind them.
+- We are not looking either into the perfect technical writing, at least in a first iteration, but in the validity of the recommendations first and foremost (substance over presentation).
 
 Let's see how far we can go.
 
@@ -41,8 +44,11 @@ Following manual visual testing:
   - some padding around score may make it look nicer
 - For now, only adjusted down the dimensions of the cells so the board fits in one screen (assuming 1360x768 res)
 
+# Screenshots
+![Initial screen](./2048s%20-%20initial%20screen.png)
+
 # Room for improvement
-- there are some dependencies within the CSS that are not visible in the code
+- There are some dependencies within the CSS that are not visible in the code
   - width of app is tied to the size of the cells of the board (100px cell -> 450px app, 80 -> 390)
   - esthetically pleasing vertical spacing is likely to depend on font size and should follow a scale
 
