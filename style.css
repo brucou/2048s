@@ -1,7 +1,7 @@
 /* General styles */
 div {
     /* for debugging purposes */
-    border: 2px solid red;
+    /* border: 2px solid red; */
 }
 
 body {
@@ -21,7 +21,7 @@ body {
     gap: 2vw;
     /* This is calculated based on the grid and gap values for the board! */
     /* Necessary to get top, board, and bottom aligned and justified */
-    width: 470px;
+    width: 450px;
     flex-wrap: wrap;
 }
 
