@@ -56,6 +56,8 @@ Let's see how far we can go.
     -  we will run it 100 times
     -  we will fail the test if the number of 2 < ??.
     -  Let's ask AI :-)
+       -  The full conversation is [here](./ai%20prompt%20and%20answer%20-%20how%20to%20test%20random%20generator.txt)
+       -  [Wikipedia on binomial proportion confidence intervals](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval)
 
 # Implementation
 - One optimization is to use a single generated float number for stating cell locations, and use its truncation when multiplied by X and X*10
