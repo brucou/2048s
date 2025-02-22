@@ -13,12 +13,17 @@
     <div id="app">
         <div id="above-the-board-area">
             <div id="primary-message-area">
+                <div id="game-title">2048</div>
+                <div id="short-game-explanation">Join the tiles, get to <em>2048</em>!</div>
+                <a id="detailed-game-explanation-link" href="#detailed-game-explanations">How to play</a>
             </div>
-            <div id="scores">
-                <div id="current-score"></div>
-                <div id="best-score"></div>
+            <div id="secondary-message-area">
+                <dl id="scores">
+                        <dt id="current-score">Score</dt><dd id="current-score-amount">232</dd>
+                        <dt id="best-score">Best</dt><dd id="best-score-amount">222000</dd>
+                </dl>
+                <div id="new-game-button">New game</div>
             </div>
-            <div id="new-game-button"></div>
         </div>
         <div id="board-area">
             <div class="board-cell">
@@ -42,8 +47,13 @@
             <div class="board-cell"></div>
             <div class="board-cell"></div>
         </div>
-        <div id="below-the-board-area"></div>
-    </div>
+        <div id="below-the-board-area">
+            <div id="detailed-game-explanations">
+                <p><strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> to move the tiles. Tiles with the same number <strong>merge into one</strong> when they touch. Add them up to reach <strong>2048</strong>!</p>
+                <p><a id="back-to-game-board" href="#above-the-board-area">Start playing</a></p>
+            </div>
+            
+        </div>
     </div>
     <!-- <script src="index.js"></script> -->
 </body>

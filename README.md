@@ -26,4 +26,17 @@ Writing down for myself and others some good practices for software development.
 
 # Implementation
 - HTML boilerplate: https://www.freecodecamp.org/news/basic-html5-template-boilerplate-code-example/
-- 
+- Flexbox playground: https://flexbox-seven.vercel.app/, https://flexbox.tech/, https://www.flexbox.fun/app
+- Copilot bing.com
+
+# Lessons learnt
+## CSS
+- Firefox has the best tooling ever for flexbox debugging (used version 95.0b12 (64-bit))
+- don't use font size in tags where no text is displayed
+  - use font-size: 24px at parent level and that caused children height to be higher than expected (because of line height of font in parent, even when the font size was overriden in the child)
+- use margin bottom and right always when needed, don't use margin left and top. Margin collapsing is a nightmare to reason about. This avoid collapsing ever happening.
+- vertical spacing quickly feels arbitrary. A scale or some vertical spacing strategy and a grid would help a lot.
+
+## AI
+- Copilot did not do too bad a job. It is likely that the entire styles could have been determined by iterating on it. Worth trying with instructions like "a little bit higher there, a little bit more vertical space between this and that" and see if it changes completely the structure or continue to use flex
+

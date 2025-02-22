@@ -1,0 +1,82 @@
+/* General styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #faf8ef;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#app {
+    width: 500px;
+    text-align: center;
+}
+
+#above-the-board-area {
+    margin-bottom: 20px;
+}
+
+#primary-message-area {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#scores {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+#current-score, #best-score {
+    background-color: #bbada0;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 45%;
+}
+
+#new-game-button {
+    background-color: #8f7a66;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#board-area {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    background-color: #bbada0;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.board-cell {
+    background-color: #cdc1b4;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #776e65;
+    border-radius: 5px;
+}
+
+.board-cell:nth-child(4n+1) {
+    margin-left: 0;
+}
+
+.board-cell:nth-child(4n) {
+    margin-right: 0;
+}
+
+#below-the-board-area {
+    margin-top: 20px;
+}
