@@ -28,6 +28,11 @@ Writing down for myself and others some good practices for software development.
 - HTML boilerplate: https://www.freecodecamp.org/news/basic-html5-template-boilerplate-code-example/
 - Flexbox playground: https://flexbox-seven.vercel.app/, https://flexbox.tech/, https://www.flexbox.fun/app
 - Copilot bing.com
+- Publishing though GitHub pages!!! -> https://brucou.github.io/2048s/
+
+# Test
+- Results are acceptable enough not to block progressing with the rest of the requirements. However, some defaults are visible
+- For now, only adjusted down the dimensions of the cells so the board fits in one screen (assuming 1360x720 res)
 
 # Lessons learnt
 ## CSS
