@@ -23,11 +23,11 @@ Let's see how far we can go.
 # Approach
 - Implementation
   - we are going to need JavaScript now to handle the click on the "new game" button
+  - define those 10/90 as constant
+  - define the list of values to pick from (2,4) as constant too  
   - Handler placed on button goes like this:
     - randomly pick two numbers (10% chance a 4, 90$ chance a 2)
     - randomly pick two **distinct** locations on the board (there are such 2, we have 4x4 empty cells)
-    - define those 10/90 as constant
-    - define the list of values to pick from (2,4) as constant too
     - display the chosen number in the chosen locations
 
 - Design:
@@ -57,7 +57,36 @@ Let's see how far we can go.
     -  we will fail the test if the number of 2 < ??.
     -  Let's ask AI :-)
        -  The full conversation is [here](./ai%20prompt%20and%20answer%20-%20how%20to%20test%20random%20generator.txt)
-       -  [Wikipedia on binomial proportion confidence intervals](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval)
+       -  In short, AI was helpful but it required a few iterations and checks to get it right
+          -  AI starts with choosing the wrong formula to answer
+          -  When prompted, it picks a better formula but a less accurate one as that formula works better with probabilities closer to 0.5 (coin toss) and we have 0.1 here
+          -  checks were done throug standard google search and peeking on [Wikipedia](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval) and [stackoverflow](https://softwareengineering.stackexchange.com/questions/147134/how-should-i-test-randomness)
+          -  it did require spending some time to understand the topic to get some confidence about the answer and being a math bachelors definitely shortened that time. Your mileage may vary.
+    -  In summary:
+       -  95% => 100 trials: passes if number of 4s between 6 and 18
+       -  99% => 100 trials: passes if number of 4s between 5 and 22
+       -  95% => 1000 trials: passes if number of 4s between 83 and 121
+       -  99% => 1000 trials: passes if number of 4s between 79 and 128
+    -  We'll try 1000 trials first and if that's too slow, we'll downgrade to 100!
+    -  This is not enough to prove the randomness of the generator but it is enough for our purposes to observe that we get 2s far more often than 4s. With those numbers we accept an observed ratio of 1/8 or 1/12 as OK vs the theoretical 1/10. 
+ -  set_up_initial_board:
+    -  .... how do we test this UI??  
+    - Let's ask AI!!
+       -  long story short, AI recommended Jasmine + Karma + some setup that was put in a codesandbox that could not be opened (did not exist...). Asking for other code playground also led to URL that did not exist or was the main page of the framework. At least, I discovered the onecompiler playground :-)
+       -  Bottom line is let's try good old QUnit...
+       -  Seems like it could work but we need to adjust the CSS a bit so we can see the test results next to the UI
+          -  QUnit has a `qunit-fixture` section that is refreshed for every test. We put our app there and try it out.
+          -  To see the app next to the HTML test reporter, we need to comment out some `position: fixed` or `position: absolute` so the HTML reporter does not override our UI.
+       -  We realize now that we have no way to select the cell with coordinate (x,y)! So we have to modify our HTML so we can find that easily with a DOM selector query.
+          -   This extra information would be data attributes. To follow HTML guidelines we should use the `data-*` syntax. Hence, `data-row`, `data-col` here.
+          -   Remember that visible content should not be stored in data-attributes but in the HTML content somewhere
+    - Every element of the user interface mentioned in the requirements should have a unique ID/selector (which will be used to test the requirement)
+      - special efforts should be made not to change those names too often as they will break the tests...
+      - but of course when the requirements will change, the tests will break but that's expected.
+      - Typical work around is to not test those UI requirements that we expect will change soon or often
+
+  - get_seeded_random_generator:
+    - run twice with the same seed, get 100 numbers and check that we have the same numbers being generated
 
 # Implementation
 - One optimization is to use a single generated float number for stating cell locations, and use its truncation when multiplied by X and X*10
@@ -70,6 +99,9 @@ Patterns:
 - design for testing
   - use pure functions as much as possible
 
+Useful links:
+- [A complete guide to data attributes ](https://css-tricks.com/a-complete-guide-to-data-attributes/)
+- [JavaScript notebook](https://scribbler.live/samples.html)
 
 # Tests
 ...
@@ -88,4 +120,7 @@ Patterns:
   - beware that when rounding random floats to integer for instance to generate integers in a given interval, there is a small but non-zero likelihood that two subsequent generated numbers will be the same. It may not matter but if it does, act accordingly.
 
 ## AI
-- ..
+- One must absolutely check AI results, specially in those topics that require expertise. 
+  - The problem is one may not have that expertise. Here, I have some mathematics background so it was easy for me to notice the error and navigate through the solution space to pick the right formula.
+  - Even with the wrong formula, in this specific case, the interval was not far from the most accurate one and there would not be highly adverse consequences. Still, one must be rigorous, there is no way in general to know the impact of this imprecision on the rest of the codebase. 
+  - AI shortened the time I would spend if I had to do it by myself from scratch though! 

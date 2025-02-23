@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>2048s</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./vendor/QUnit/qunit-2.24.1.css">
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture">
+
+        <div id="app">
+            <div id="above-the-board-area">
+                <div id="primary-message-area">
+                    <div id="game-title">2048</div>
+                    <div id="short-game-explanation">Join the tiles, get to <em>2048</em>!</div>
+                    <a id="detailed-game-explanation-link" href="#detailed-game-explanations">How to play</a>
+                </div>
+                <div id="secondary-message-area">
+                    <dl id="scores">
+                            <dt id="current-score">Score</dt><dd id="current-score-amount">0</dd>
+                            <dt id="best-score">Best</dt><dd id="best-score-amount">0</dd>
+                    </dl>
+                    <div id="new-game-button">New game</div>
+                </div>
+            </div>
+            <div id="board-area">
+                <div class="board-cell" data-row="0" data-col="0">
+                    
+                </div>
+                <div class="board-cell" data-row="0" data-col="1"></div>
+                <div class="board-cell" data-row="0" data-col="2"></div>
+                <div class="board-cell" data-row="0" data-col="3"></div>
+                <div class="board-cell" data-row="1" data-col="0"></div>
+                <div class="board-cell" data-row="1" data-col="1"></div>
+                <div class="board-cell" data-row="1" data-col="2"></div>
+                <div class="board-cell" data-row="1" data-col="3"></div>
+                <div class="board-cell" data-row="2" data-col="0"></div>
+                <div class="board-cell" data-row="2" data-col="1"></div>
+                <div class="board-cell" data-row="2" data-col="2">
+                    
+                </div>
+                <div class="board-cell" data-row="2" data-col="3"></div>
+                <div class="board-cell" data-row="3" data-col="0"></div>
+                <div class="board-cell" data-row="3" data-col="1"></div>
+                <div class="board-cell" data-row="3" data-col="2"></div>
+                <div class="board-cell" data-row="3" data-col="3"></div>
+            </div>
+            <div id="below-the-board-area">
+                <div id="detailed-game-explanations">
+                    <p><strong>HOW TO PLAY:</strong> Use your <strong>arrow keys</strong> to move the tiles. Tiles with the same number <strong>merge into one</strong> when they touch. Add them up to reach <strong>2048</strong>!</p>
+                    <p><a id="back-to-game-board" href="#above-the-board-area">Start playing</a></p>
+                </div>
+                
+            </div>
+        </div>
+        <script type="module" src="./index.js"></script>
+    </div>
+    <script src="./vendor/QUnit/qunit-2.24.1.js"></script>
+    <script type="module" src="tests/index.js"></script>
+</body>
+
+</html>
