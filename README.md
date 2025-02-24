@@ -145,7 +145,6 @@ Useful links:
 - IT NOW WORKS!!
   - ![QUnit in action](./test%20passing%20snapshot.png)
 
-![alt text](<test passing snapshot-1.png>)
 # Screenshots
 
 # Room for improvement
