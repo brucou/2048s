@@ -69,6 +69,9 @@ Let's see how far we can go.
        -  99% => 1000 trials: passes if number of 4s between 79 and 128
     -  We'll try 1000 trials first and if that's too slow, we'll downgrade to 100!
     -  This is not enough to prove the randomness of the generator but it is enough for our purposes to observe that we get 2s far more often than 4s. With those numbers we accept an observed ratio of 1/8 or 1/12 as OK vs the theoretical 1/10. 
+    -  We also need to test the randomness of the location for the first two cells. That comes down to testing the uniform distribution between 1 and 4 (0 and 3 actually) of the abscissa and ordinate for the location. AI gave a great answer for this.
+       -  the AI provided function had to be manually updated to accept different parameters but that was easy enough
+
  -  set_up_initial_board:
     -  .... how do we test this UI??  
     - Let's ask AI!!
@@ -104,12 +107,16 @@ Useful links:
 - [JavaScript notebook](https://scribbler.live/samples.html)
 
 # Tests
-...
+- Some errors done when following AI code. 
+- In the end, we replaced set_up_initial_board with two functions:
+  - reset_board
+  - start_new_game
+  - we only test start_new_game, which is the one matching the requirements for this branch
 
 # Screenshots
 
 # Room for improvement
-.
+
 
 # Lessons learnt
 ## CSS
@@ -124,3 +131,11 @@ Useful links:
   - The problem is one may not have that expertise. Here, I have some mathematics background so it was easy for me to notice the error and navigate through the solution space to pick the right formula.
   - Even with the wrong formula, in this specific case, the interval was not far from the most accurate one and there would not be highly adverse consequences. Still, one must be rigorous, there is no way in general to know the impact of this imprecision on the rest of the codebase. 
   - AI shortened the time I would spend if I had to do it by myself from scratch though! 
+  - In the second use of AI (how to determine that a random generator produces uniformly distributed numbers), AI was great and saved a lot of time. Reading through the die-hard tests did not lead me anywhere quickly.
+- AI code completion feels really magic. However, it is also a distraction and can led to loosing flow when the completion is irrelevant and time is spent diverting from an original line of thought. That could however improve as one gets used to AI coding assistant? The jury is open.
+
+
+## Testing
+- It did took some time to test the randomness/frequencies for the first two cells. I believe that is an important enough requirement that makes it worth. However, the learning is to always compare the cost of writing a test vs. the value of having it. Don't test the stuff that does not matter.
+- Given that I did find errors in the generation of the locations (the ordinate originally was sometimes above 4), the test was useful and a good decision. So the learning is the reverse one here. Do test the stuff that matters.
+
