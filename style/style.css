@@ -1,0 +1,132 @@
+/* General styles */
+div {
+    /* for debugging purposes */
+    /* border: 2px solid red; */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #faf8ef;
+    padding: 0;
+    height: 100vh;
+    /* center the page */
+    display: flex;
+    justify-content: center;
+}
+
+#app {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    gap: 2vw;
+    /* This is calculated based on the grid and gap values for the board! */
+    /* Necessary to get top, board, and bottom aligned and justified */
+    width: 360px;
+    flex-wrap: wrap;
+}
+
+#above-the-board-area {
+    /* something visible, not too much, but still something enough to separate */
+    margin-bottom: 2vh;
+    /* Push primary and secondary message areas to the left and right sides */
+    display: flex;
+    justify-content: space-between;
+    /* Take the entire width for the row so we are aligned with the largest item */
+    width: 100%;
+}
+
+#game-title {
+    font-size: xx-large;
+    font-weight: bold;
+    /* Some significant vertical space */
+    margin-bottom: 1rem;
+}
+
+#short-game-explanation {
+    font-size: small;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+
+#detailed-game-explanation-link{
+font-size: small;
+font-weight: bold;
+margin: 0;
+padding: 0;
+margin-bottom: 0.3rem;
+}
+
+#secondary-message-area {
+    font-weight: bold;
+}
+
+#scores {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    margin-bottom: 1.5vh;
+}
+
+
+#current-score,
+#best-score {
+    background-color: #bbada0;
+    color: white;
+    font-size: small;
+    text-align: center;
+}
+
+#current-score-amount,
+#best-score-amount {
+    font-size: medium;
+    color: white;
+    background-color: #bbada0;
+    text-align: center;
+    margin:0;
+    margin-bottom: 0.3rem;
+}
+
+#new-game-button {
+    background-color: #8f7a66;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#board-area {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background-color: #bbada0;
+    padding: 8px;
+    border-radius: 10px;
+    width: auto;
+}
+
+.board-cell {
+    background-color: #cdc1b4;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #776e65;
+    border-radius: 5px;
+}
+
+.board-cell:nth-child(4n+1) {
+    margin-left: 0;
+}
+
+.board-cell:nth-child(4n) {
+    margin-right: 0;
+}
+
+#below-the-board-area {
+    flex-basis: content;
+    /* width: 100%; */
+}

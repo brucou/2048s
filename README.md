@@ -143,12 +143,13 @@ Useful links:
       - Using the `<template>` tag. Let's try and see if that would work well enough...
       - Use event delegation so event handler do not need to be recreated or removed when an element is replaced or destroyed.
 - IT NOW WORKS!!
-  - ![QUnit in action](./test%20passing%20snapshot.png)
+  - ![QUnit in action](./test%20passing%20snapshot.png) available in the branch's repo.
 
 # Screenshots
+- ![Screencast](./screenshots/Screencast.mp4)
 
 # Room for improvement
-
+- pay more attention to AI suggestions as, just like copy paste, they lead to loss of productivity when they are wrong. It is eady to just accept the answer and only quickly overlook what it does. It has to be checked thoroughly as any foreign code entering the database (say from StackOverflow)
 
 # Lessons learnt
 ## CSS
@@ -159,6 +160,7 @@ Useful links:
   - beware that when rounding random floats to integer for instance to generate integers in a given interval, there is a small but non-zero likelihood that two subsequent generated numbers will be the same. It may not matter but if it does, act accordingly.
 
 ## AI
+- see repo's AI directory for prompts and answers
 - One must absolutely check AI results, specially in those topics that require expertise. 
   - The problem is one may not have that expertise. Here, I have some mathematics background so it was easy for me to notice the error and navigate through the solution space to pick the right formula.
   - Even with the wrong formula, in this specific case, the interval was not far from the most accurate one and there would not be highly adverse consequences. Still, one must be rigorous, there is no way in general to know the impact of this imprecision on the rest of the codebase. 
@@ -166,8 +168,7 @@ Useful links:
   - In the second use of AI (how to determine that a random generator produces uniformly distributed numbers), AI was great and saved a lot of time. Reading through the die-hard tests did not lead me anywhere quickly.
 - AI code completion feels really magic. However, it is also a distraction and can led to loosing flow when the completion is irrelevant and time is spent diverting from an original line of thought. That could however improve as one gets used to AI coding assistant? The jury is open.
 
-
 ## Testing
 - It did took some time to test the randomness/frequencies for the first two cells. I believe that is an important enough requirement that makes it worth. However, the learning is to always compare the cost of writing a test vs. the value of having it. Don't test the stuff that does not matter.
 - Given that I did find errors in the generation of the locations (the ordinate originally was sometimes above 4), the test was useful and a good decision. So the learning is the reverse one here. Do test the stuff that matters.
-
+- Testing in the browser does require some effort to write the code so it can be tested. But that's OK. Testing is not an afterthought but a design criteria. If focusing on writing an application first, and then how to test it later, oftentimes, one discovers that it cannot test the application properly, think that testing takes too much time, is too expensive etc. That is due to the ton of complexity created by adding testing tools that are hard to integrate after the fact. Some front-end folks even argue for having mostly end-to-end tests (!).
