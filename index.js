@@ -58,7 +58,11 @@ export function get_seeded_random_generator(seed) {
   ]
  */
 export function get_starting_cells(seeded_random_generator) {
-  const [
+  let first_cell_x, first_cell_y, first_cell_value;
+  let second_cell_x, second_cell_y, second_cell_value;
+
+  do {
+  let [
     rand_first_cell_value,
     rand_second_cell_value,
     position_first_cell,
@@ -70,14 +74,15 @@ export function get_starting_cells(seeded_random_generator) {
     seeded_random_generator(),
   ];
 
-  const first_cell_value = rand_first_cell_value < 0.9 ? 2 : 4;
-  const second_cell_value = rand_second_cell_value < 0.9 ? 2 : 4;
+   first_cell_value = rand_first_cell_value < 0.9 ? 2 : 4;
+   second_cell_value = rand_second_cell_value < 0.9 ? 2 : 4;
 
-  const first_cell_x = Math.trunc((100 * position_first_cell) % 4);
-  const first_cell_y = Math.trunc(((100 * position_first_cell) % 16) / 4);
+   first_cell_x = Math.trunc((100 * position_first_cell) % 4);
+   first_cell_y = Math.trunc(((100 * position_first_cell) % 16) / 4);
 
-  const second_cell_x = Math.trunc((100 * position_second_cell) % 4);
-  const second_cell_y = Math.trunc(((100 * position_second_cell) % 16) / 4);
+   second_cell_x = Math.trunc((100 * position_second_cell) % 4);
+   second_cell_y = Math.trunc(((100 * position_second_cell) % 16) / 4);
+} while (first_cell_x === second_cell_x &&  first_cell_y === second_cell_y);
 
   return [
     [first_cell_x, first_cell_y, first_cell_value],
@@ -92,7 +97,8 @@ export function reset_board() {
   });
 }
 
-export function start_new_game() {
+export function start_new_game(deps) {
+  const {random_generator}= deps;
   const [
     [first_cell_x, first_cell_y, first_cell_value],
     [second_cell_x, second_cell_y, second_cell_value],
@@ -108,14 +114,47 @@ export function start_new_game() {
   reset_board();
   el_first_cell.textContent = first_cell_value;
   el_second_cell.textContent = second_cell_value;
-  console.log(first_cell_x, first_cell_y, first_cell_value);
-  console.log(second_cell_x, second_cell_y, second_cell_value);
 }
 
-// Main
-const seed = "some seed string";
+/**
+ * Returns the current state of the board. 0 represents an empty cell. 
+ * Any non-zero number represents the value of the cell.
+ * @returns {Array<Array<number>>} 4x4 matrix representing the current state of the board
+ */
+export function get_board_state() {
+  return [0, 1, 2, 3].map((i) =>
+    Array.from(document.querySelectorAll(`[data-row="${i}"]`)).map(
+      (x) => x.textContent | 0
+    )
+  );
+}
+
+export function get_best_score() {
+  return document.querySelector("#best-score-amount").textContent | 0;
+}
+
+export function get_current_score() {
+  return document.querySelector("#current-score-amount").textContent | 0;
+}
+
+export function get_ui_elements() {
+  const new_game_button = document.querySelector("#new-game-button");
+
+  return { new_game_button };
+}
+
+export function render() {
+  // Init key dependencies
+  const seed = "some seed string";
 const random_generator = get_seeded_random_generator(seed);
 
-const new_game_button = document.querySelector("#new-game-button");
-new_game_button?.addEventListener("click", start_new_game);
+  //Set markup
+  document.querySelector('#app')?.remove();
+  document.body.append(document.querySelector('#app-template').content.cloneNode(true));
 
+  // Set event listeners
+  const new_game_button = document.querySelector("#new-game-button");
+  new_game_button?.addEventListener("click", _ => start_new_game({random_generator}));
+}
+
+render();

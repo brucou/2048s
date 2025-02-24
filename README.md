@@ -105,6 +105,7 @@ Patterns:
 Useful links:
 - [A complete guide to data attributes ](https://css-tricks.com/a-complete-guide-to-data-attributes/)
 - [JavaScript notebook](https://scribbler.live/samples.html)
+- [Event delegation summary](https://dev.to/shafayeat/mastering-javascript-event-delegation-3k2k)
 
 # Tests
 - Some errors done when following AI code. 
@@ -112,6 +113,38 @@ Useful links:
   - reset_board
   - start_new_game
   - we only test start_new_game, which is the one matching the requirements for this branch
+- !!!!! Even with the slight modifications of QUnit we performed, we still can't reach our goal to test the UI in the browser itself
+  - What we wanted: 
+    - test the UI's behavior in response to user actions
+      - not test purely visual elements - that is better suited to visual testing or other techniques. That means we don't test animations, sounds, colors, fonts, layout, etc.
+      - not too high focus on UI content (text of a button, etc.) - that is better suited to visual testing or other techniques. Also that is one of the most likely to change part of requirements so again cost/benefit analysis necessary to select which test cases to pursue.
+      - test UI structure is as per requirements. E.g., there is a button, when clicked it does what is expected.
+      - Only for those user actions that are easy enough to replicate that the cost/benefit is favourable. That means [simulating hovering over an area](https://stackoverflow.com/questions/17226676/how-to-simulate-a-mouseover-in-pure-javascript-that-activates-the-css-hover) is probably not worth the effort.
+    - See failing tests and successful tests: we got that.
+    - Rerun tests selectively and start with failing tests: we got that
+    - UI tests that fails can be debugged directly in the same browser used by real users: we only partly got that
+      - that means not stubbing the thing under test so we don't mock the browser but possibly other interfaced systems (e.g., network, database). So headless browsers, JSDom and the likes are out of consideration. However close they are to being a real browser, there is no such thing as the real thing.
+      - We do mock the user (else this would be manual testing ain't it). But we do so as faithfully as possible. That means we need to check requirements by acting on the user interface like a user would (e.g., clicking button, filling fields, etc.). See previous remarks about cost/benefit caveats.
+  - What we have:
+        - tests that run directly in the browser next to the test runner
+        - possibility to insert debugging instructions or use dev tools for failing tests
+  - What we don't have:
+        - the ability to restart from a fresh UI on every new test (QUnit fixture capability restore the HTML after every test but not the event handlers...)
+        - because of DOM limitations/security, we can't faithfully mock all user interactions (see note about hovering and non-trusted events) from a JavaScript script.
+  - ADR:
+    - we will render the UI through JavaScript rather than through HTML and call the rendering in our test setups.
+    - The good:
+      - we have an SPA anyways so there was always going to be some JavaScript in there.
+      - we can design the render function to get the user interface back to any suitable state for testing purposes
+    - The bad:
+      - well, it is extra work and thus extra bugs and work arounds so we need to keep it as simple as possible
+      - as simple as possible means we may run into dead ends where the complexity is not worth the benefit... We'll see how to handle it when we get there.
+    - The choice:
+      - Using the `<template>` tag. Let's try and see if that would work well enough...
+      - Use event delegation so event handler do not need to be recreated or removed when an element is replaced or destroyed.
+- IT NOW WORKS!!
+  - we did have t
+
 
 # Screenshots
 
