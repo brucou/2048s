@@ -102,6 +102,7 @@ QUnit.module("UI updates", function (hooks) {
     function (assert) {
         const { new_game_button } = get_ui_elements();
         new_game_button.click();
+        
         const board_state = get_board_state();
         const current_score = get_current_score();
 debugger
