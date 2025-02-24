@@ -143,9 +143,9 @@ Useful links:
       - Using the `<template>` tag. Let's try and see if that would work well enough...
       - Use event delegation so event handler do not need to be recreated or removed when an element is replaced or destroyed.
 - IT NOW WORKS!!
-  - we did have t
+  - ![QUnit in action](./test%20passing%20snapshot.png)
 
-
+![alt text](<test passing snapshot-1.png>)
 # Screenshots
 
 # Room for improvement
