@@ -149,7 +149,7 @@ Useful links:
 - ![Screencast](./screenshots/Screencast.mp4)
 
 # Room for improvement
-- pay more attention to AI suggestions as, just like copy paste, they lead to loss of productivity when they are wrong. It is eady to just accept the answer and only quickly overlook what it does. It has to be checked thoroughly as any foreign code entering the database (say from StackOverflow)
+- pay more attention to AI suggestions as, just like copy paste, they lead to loss of productivity when they are wrong. It is easy to just accept the answer and only quickly overlook what it does. It has to be checked thoroughly as any foreign code entering the database (say from StackOverflow)
 
 # Lessons learnt
 ## CSS
