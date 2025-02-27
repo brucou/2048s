@@ -72,63 +72,67 @@ Following the aforementioned rules, we believe that they are equivalent to the f
 
 ```h
 collapse_to_the_right ([...rest of values,c,d]) =
-- 1. rest of values is empty => collapse_to_the_right_2(c,d)
-- 2. rest of values is just one value => [that one value]
-- 3. rest of values is at least two values:
-  - 3a. all values are 0 => return a copy of that same thing 
-  - 3b. d = 0 => [0, collapse_to_the_right([...rest of values, c])].flat
-  - 3c. d != 0 &
-    - c = d =>  [0, collapse_to_the_right(rest of values), 2c].flat
-    - c != d & c = 0 => [0, collapse_to_the_right([...rest of values, d])].flat
-    - c != d & c != 0 => [collapse_to_the_right([...rest of values,c]), d].flat
+- 1. all values are 0 => return a copy of that same thing 
+- 2. d = 0 => [0, collapse_to_the_right([...rest of values, c])].flat
+- 3. d != 0 &
+  - 3a. c = d =>  [0, collapse_to_the_right(rest of values), 2c].flat
+  - 3b. c != d & c = 0 => [0, collapse_to_the_right([...rest of values, d])].flat
+  - c != d & c != 0 => [collapse_to_the_right([...rest of values,c]), d].flat
 
-collapse_to_the_right_2(c,d):
+collapse_to_the_right([c,d]):
 - d = 0 => [0,c]
 - d != 0 & c = d => [0, 2c]
 - d != 0 & c != d => [c, d]
+
+collapse_to_the_right([a]) => [a]
 ```
 
 Quick properties of this algorithm:
 - it is recursive
 - it terminates:
-  - 3a is a terminal case for the recursion
-  - 3b and 3c lead to a reduction in the size of the array, eventually being 1 or 2, which are terminal cases with custom solutions
-- 3c first item ensures that [2,2,2,2] behaves correctly: the first couple of 2 merge, but they can't later merge with the other couple of 2s
-- 3d and 1 and 2 ensure that there is never 0 in the last position of the returned array unless we started with a 0-filled array
-- 3b, 3c and 1 ensure that all 0s are on the left side
+  - 1 is a terminal case for the recursion
+  - 2 and 3 lead to a reduction in the size of the array, eventually being 1 or 2, which are terminal cases with custom solutions
+- 3a. ensures that [2,2,2,2] behaves correctly: the first couple of 2 merge, but they can't later merge with the other couple of 2s
+- 2 and 3 ensure that 0 disappear from the right side (unless all zeros)
+- 2 and 3 ensure that all 0s appear the left side
 
 ## Rendering
 No specific issue here, whatever data structure we use to keep the board state, we need to extract the four rows from it, compute the swiped rows, and put that back in the board. If we extract the board state right then, the new four rows we recover should be our computed four rows exactly.
 
 # Tests
-- while our algorithm seems correct at first glance, it cannot be used as a definition of the rules, which are given in plain language. The only factible strategy is to check the algorithm on concrete cases. Full correctness can be proven by exhausting the test space.
-- the test space for a row length of 4 is 47. They can be enumerated by considering that the test space is dictated by quatruplets with three cases of interest: number is 0, number is not 0 and appearing only once, number is not 0 and appearing several times. 
+- while our algorithm seems correct at first glance, it cannot be used as a definition of the rules, which are given in plain language. An alternative strategy is to check the algorithm on concrete cases. Full correctness can be proven by exhausting the test space.
+- the test space for a row length of 4 is 52. It can be enumerated by considering that the test space is dictated by quatruplets with each number falling in one of three cases: number is 0, number is not 0 and appearing only once, number is not 0 and appearing several times: 
   - number of 4 zeros: 1
-  - number of 3 zero x not zero number : 4x1
-  - number of 2 zeros x (number appearing once or number appearing twice): 6x2
-  - number of 1 zero x (three number same, two number same, three number different) = 4x3
-  - no zero x (all same, three same, two same (other two different, or other two same), all different): 1x(1 + 4 + 6x(1+1) + 1)
+  - number of 3 zero x not zero number : 4 x 1
+  - number of 2 zeros x (number appearing once or number appearing twice): 6 x 2
+  - number of 1 zero x (three number same, two number same, three number different) = 4 x (1 + 3 + 1)
+  - no zero x (all same, three same, two same+other two different, two same + other two same), all different): 1x(1 + 4 + 6x1+ 3x1 + 1)
 
 Here are the cases with their corresponding results:
 ```
     # all letters non-zero and different
     a,b,c,d -> a,b,c,d
+
     # all letters non-zero and same
     a,a,a,a -> 0,0,2a,2a
+
     # two letter non-null same
     a,a,c,d -> 0,2a,c,d
-    a,a,c,c -> 0,0,2a,2c
+    a,b,a,d -> a,b,a,d
+    a,b,c,a -> a,b,c,a
     a,b,b,d -> 0,a,2b,d
     a,b,c,b -> a,b,c,b
     a,b,c,c -> 0,a,b,2c
-    a,b,a,d -> a,b,a,d
-    a,b,c,a -> a,b,c,a
+
+    a,a,c,c -> 0,0,2a,2c
     a,b,a,b -> a,b,a,b
     a,b,b,a -> 0,a,2b,a
+
     # three letters non-null same
     a,a,a,d -> 0,a,2a,d
     a,b,a,a -> 0,a,b,2a
     a,b,b,b -> 0,a,b,2b
+    a,a,c,a -> 0,2a,c,a
     # 1 zero somewhere, all letters different
     0,b,c,d -> 0,b,c,d
     a,0,c,d -> 0,a,c,d
@@ -178,9 +182,9 @@ Here are the cases with their corresponding results:
     a,a,0,0 -> 0,0,0,2a 
 
 ```
-Errr we have 51 cases there... So either we have duplicated cases or we counted wrong. I'll let you figure out as an exercise which is it (Hint: the issue mostly lies in the notation that we used). While we are now doubting that we are covering the test space exhaustively, this is plenty of tests to get enough confidence in the game's correct behavior. We can supplement this approach (oracle-based testing) with property-based testing.
+We have indeed 52 cases there... Even if our reasoning is faulty and we are not covering the test space exhaustively, this is plenty of tests to get enough confidence in the game's correct behavior. We can supplement this approach (oracle-based testing) with property-based testing.
 
-It would still be interesting to review this to get a full specification of the game rules based on the exhaustive list of cases.
+It is an interesting problem though to have a detailed proof that the previous cases exhaust the test space.
 
 ## Property-based testing
 - besides the zero array, every output has 0 only on the left side or has no zero at all (compactness property)
