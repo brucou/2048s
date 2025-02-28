@@ -77,14 +77,14 @@ collapse_to_the_right ([...rest of values,c,d]) =
 - 3. d != 0 &
   - 3a. c = d =>  [0, collapse_to_the_right(rest of values), 2c].flat
   - 3b. c != d & c = 0 => [0, collapse_to_the_right([...rest of values, d])].flat
-  - c != d & c != 0 => [collapse_to_the_right([...rest of values,c]), d].flat
+  - 3c. c != d & c != 0 => [collapse_to_the_right([...rest of values,c]), d].flat
 
 collapse_to_the_right([c,d]):
 - d = 0 => [0,c]
 - d != 0 & c = d => [0, 2c]
 - d != 0 & c != d => [c, d]
 
-collapse_to_the_right([a]) => [a]
+collapse_to_the_right([a]) => [a] 
 ```
 
 Quick properties of this algorithm:
@@ -108,8 +108,8 @@ No specific issue here, whatever data structure we use to keep the board state, 
   - number of 1 zero x (three number same, two number same, three number different) = 4 x (1 + 3 + 1)
   - no zero x (all same, three same, two same+other two different, two same + other two same), all different): 1x(1 + 4 + 6x1+ 3x1 + 1)
 
-Here are the cases with their corresponding results:
-```
+Here are the cases with their corresponding results (different letters mean different values):
+```go
     # all letters non-zero and different
     a,b,c,d -> a,b,c,d
 
@@ -182,17 +182,28 @@ Here are the cases with their corresponding results:
     a,a,0,0 -> 0,0,0,2a 
 
 ```
-We have indeed 52 cases there... Even if our reasoning is faulty and we are not covering the test space exhaustively, this is plenty of tests to get enough confidence in the game's correct behavior. We can supplement this approach (oracle-based testing) with property-based testing.
+We have indeed 52 cases there... To be honest, it took me two iterations to get both the combinatorial count and the list of cases right and matching. Was a long time I did not do math I guess :-) Even if our reasoning is still faulty and we are not covering the test space exhaustively, this is plenty of tests to get enough confidence in the game's correct behavior. We can supplement this approach (oracle-based testing) with property-based testing.
 
 It is an interesting problem though to have a detailed proof that the previous cases exhaust the test space.
 
-## Property-based testing
-- besides the zero array, every output has 0 only on the left side or has no zero at all (compactness property)
+## Property-based testing (PBT)
+- besides the zero array, every output has 0s only on the left side or has no zero at all (compactness property)
 - the sum of the array in the input matches the sum in the output (invariance property)
 - if numbers in the input are powers of 2, all numbers of the output are powers of 2
-- whatever number is in the input, there are no strictly smaller number in the output (progress property)
+- if there are zeros on the left side in the input, those same zeros are also present in the output
+- the number of zeros in the output is equal or superior to the number of zeros in the input
+- zeros aside, the smallest number of the output is equal or superior to the smallest number in the input
 
-It would also be interesting to establish whether those four properties are equivalent to the game rules, that is that they are not only necessary but sufficient.
+ Note that those six properties are necessary but not sufficient:
+ - A shifting function that turns [0,0,c,c] into itself passes all four but fails the game rules. 
+ - A shifting function that turns [a,b,a,b] into [b,a,b,a] also fails the game rules but passes all four properties.
+
+
+That is a lot of tests :-) Depending on our confidence and time target, we could skip the PBT and go for the oracle testing:
+- Here we will do it all because the goal is to learn and showcase useful patterns that can be reused in more complex applications. 
+- Additionally if we expand the game board to a larger number of cells, those tests will be reusable as is. L
+- ast reason, in case we made a mistake in some of our oracle tests (would not be strange in a set of 52 cases), the PBT makes it more likely to find them.
+
 
 # Screenshots
 

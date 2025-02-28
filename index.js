@@ -62,27 +62,27 @@ export function get_starting_cells(seeded_random_generator) {
   let second_cell_x, second_cell_y, second_cell_value;
 
   do {
-  let [
-    rand_first_cell_value,
-    rand_second_cell_value,
-    position_first_cell,
-    position_second_cell,
-  ] = [
-    seeded_random_generator(),
-    seeded_random_generator(),
-    seeded_random_generator(),
-    seeded_random_generator(),
-  ];
+    let [
+      rand_first_cell_value,
+      rand_second_cell_value,
+      position_first_cell,
+      position_second_cell,
+    ] = [
+      seeded_random_generator(),
+      seeded_random_generator(),
+      seeded_random_generator(),
+      seeded_random_generator(),
+    ];
 
-   first_cell_value = rand_first_cell_value < 0.9 ? 2 : 4;
-   second_cell_value = rand_second_cell_value < 0.9 ? 2 : 4;
+    first_cell_value = rand_first_cell_value < 0.9 ? 2 : 4;
+    second_cell_value = rand_second_cell_value < 0.9 ? 2 : 4;
 
-   first_cell_x = Math.trunc((100 * position_first_cell) % 4);
-   first_cell_y = Math.trunc(((100 * position_first_cell) % 16) / 4);
+    first_cell_x = Math.trunc((100 * position_first_cell) % 4);
+    first_cell_y = Math.trunc(((100 * position_first_cell) % 16) / 4);
 
-   second_cell_x = Math.trunc((100 * position_second_cell) % 4);
-   second_cell_y = Math.trunc(((100 * position_second_cell) % 16) / 4);
-} while (first_cell_x === second_cell_x &&  first_cell_y === second_cell_y);
+    second_cell_x = Math.trunc((100 * position_second_cell) % 4);
+    second_cell_y = Math.trunc(((100 * position_second_cell) % 16) / 4);
+  } while (first_cell_x === second_cell_x && first_cell_y === second_cell_y);
 
   return [
     [first_cell_x, first_cell_y, first_cell_value],
@@ -97,8 +97,59 @@ export function reset_board() {
   });
 }
 
+/**
+ * Takes a row to be collapsed to the right and returns the row collapsed to the right.
+ * For details of the specifications, see the 2048 game rules.
+ * You can also look at the README.md file for a detailed explanation.
+ * The row must contain at least one element.
+ * All elements are positive integers (>= 0).
+ * @param {Array<Number>} row
+ */
+export function collapse_to_the_right(row) {
+  const length = row.length;
+
+  if (length == 1) {
+    return [row[0]];
+  }
+
+  {
+  if (length == 2) {
+    let  [c, d] = row;
+    return d === 0 ? [0, c] : c === d ? [0, 2 * c] : [c, d];
+  }
+}
+
+  if (length > 2) {
+    // If the row is all zeros, return a row of zeros
+    if (row.reduce((acc, x) => acc + x, 0) === 0) {
+      return row.map(x => 0);
+    }
+
+    let c = row.pop();
+    let d = row.pop();
+    let rest = row;
+
+    if (d === 0) {
+      return [0, collapse_to_the_right([...rest, c])].flat();
+    }
+
+    if (d !== 0 && c === d) {
+      return [0, collapse_to_the_right(rest), 2*c].flat();
+    }
+
+    if (d !== 0 && c !== d) {
+      if (c === 0) {
+        return[0, collapse_to_the_right([...rest, d])].flat
+      }
+      else {
+        return [collapse_to_the_right([...rest, c]), d].flat
+      }
+    }
+  }
+}
+
 export function start_new_game(deps) {
-  const {random_generator}= deps;
+  const { random_generator } = deps;
   const [
     [first_cell_x, first_cell_y, first_cell_value],
     [second_cell_x, second_cell_y, second_cell_value],
@@ -117,7 +168,7 @@ export function start_new_game(deps) {
 }
 
 /**
- * Returns the current state of the board. 0 represents an empty cell. 
+ * Returns the current state of the board. 0 represents an empty cell.
  * Any non-zero number represents the value of the cell.
  * @returns {Array<Array<number>>} 4x4 matrix representing the current state of the board
  */
@@ -146,15 +197,19 @@ export function get_ui_elements() {
 export function render() {
   // Init key dependencies
   const seed = "some seed string";
-const random_generator = get_seeded_random_generator(seed);
+  const random_generator = get_seeded_random_generator(seed);
 
   //Set markup
-  document.querySelector('#app')?.remove();
-  document.body.append(document.querySelector('#app-template').content.cloneNode(true));
+  document.querySelector("#app")?.remove();
+  document.body.append(
+    document.querySelector("#app-template").content.cloneNode(true)
+  );
 
   // Set event listeners
   const new_game_button = document.querySelector("#new-game-button");
-  new_game_button?.addEventListener("click", _ => start_new_game({random_generator}));
+  new_game_button?.addEventListener("click", (_) =>
+    start_new_game({ random_generator })
+  );
 }
 
 render();
