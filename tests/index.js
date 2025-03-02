@@ -1,10 +1,20 @@
-import { get_seeded_random_generator, get_starting_cells, get_board_state, get_current_score, get_best_score, get_ui_elements, render } from "../index.js";
+import {
+  get_seeded_random_generator,
+  get_starting_cells,
+  collapse_to_the_right,
+  get_board_state,
+  get_current_score,
+  get_best_score,
+  get_ui_elements,
+  events,
+} from "../index.js";
 import { check_generator } from "../tests/_utils.js";
 
-QUnit.testStart(({name, module, testId, previousFailure }) => {
+QUnit.testStart(({ name, module, testId, previousFailure }) => {
   if (module.trim().startsWith("(UI)")) {
     console.debug(`Running test ${testId} '${name}'`);
-    render();
+
+    events.emitter("INITIALIZE_APP", { detail: void 0 });
   }
 });
 
@@ -36,25 +46,38 @@ QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User clicks on the new game button and the game starts, with two distint cells on the board, and a zero score",
     function (assert) {
-        const { new_game_button } = get_ui_elements();
-        new_game_button.click();
+      events.emitter("START_NEW_GAME", { detail: void 0 });
 
-        const board_state = get_board_state();
-        const current_score = get_current_score();
+      const board_state = get_board_state();
+      const current_score = get_current_score();
 
-        const count_valid_cells = board_state.reduce((acc, row) => { 
-            const row_count = row.reduce((acc, number) => [2, 4].includes(number) ? acc + 1 : acc, 0);
-            return acc + row_count;
-        }, 0);
-
-        const count_invalid_cells = board_state.reduce((acc, row) => { 
-          const row_count = row.reduce((acc, number) => [0, 2, 4].includes(number) ? acc: acc + 1 , 0);
-          return acc + row_count;
+      const count_valid_cells = board_state.reduce((acc, row) => {
+        const row_count = row.reduce(
+          (acc, number) => ([2, 4].includes(number) ? acc + 1 : acc),
+          0
+        );
+        return acc + row_count;
       }, 0);
 
-        assert.deepEqual(current_score, 0, "Current score is 0");
-        assert.deepEqual(count_valid_cells, 2, "There are two cells on the board with the expected values");
-        assert.deepEqual(count_invalid_cells, 0, "There are only two non-empty cells on the board");
+      const count_invalid_cells = board_state.reduce((acc, row) => {
+        const row_count = row.reduce(
+          (acc, number) => ([0, 2, 4].includes(number) ? acc : acc + 1),
+          0
+        );
+        return acc + row_count;
+      }, 0);
+
+      assert.deepEqual(current_score, 0, "Current score is 0");
+      assert.deepEqual(
+        count_valid_cells,
+        2,
+        "There are two cells on the board with the expected values"
+      );
+      assert.deepEqual(
+        count_invalid_cells,
+        0,
+        "There are only two non-empty cells on the board"
+      );
     }
   );
 });
@@ -201,10 +224,414 @@ QUnit.module("Random number generation", function (hooks) {
         "The ordinate for the second cell is uniformally distributed"
       );
 
-      const is_two_cells_distinct = random_generated_starting_cells.reduce((acc, {first_cell_x, first_cell_y, second_cell_x, second_cell_y}) => {
-        return acc && !(first_cell_x === second_cell_x && first_cell_y === second_cell_y);
-      }, true);
-      assert.ok(is_two_cells_distinct, "The first two generated cells are distinct");
+      const is_two_cells_distinct = random_generated_starting_cells.reduce(
+        (acc, { first_cell_x, first_cell_y, second_cell_x, second_cell_y }) => {
+          return (
+            acc &&
+            !(first_cell_x === second_cell_x && first_cell_y === second_cell_y)
+          );
+        },
+        true
+      );
+      assert.ok(
+        is_two_cells_distinct,
+        "The first two generated cells are distinct"
+      );
     }
   );
+});
+
+QUnit.module("Collapse a row to the right", function (hooks) {
+  const sample_size = 10;
+  const oracle_tests = `
+
+    # all letters non-zero and different
+    a,b,c,d -> a,b,c,d
+
+    # all letters non-zero and same
+    a,a,a,a -> 0,0,2a,2a
+
+    # two letter non-null same
+    a,a,c,d -> 0,2a,c,d
+    a,b,a,d -> a,b,a,d
+    a,b,c,a -> a,b,c,a
+    a,b,b,d -> 0,a,2b,d
+    a,b,c,b -> a,b,c,b
+    a,b,c,c -> 0,a,b,2c
+
+    a,a,c,c -> 0,0,2a,2c
+    a,b,a,b -> a,b,a,b
+    a,b,b,a -> 0,a,2b,a
+
+    # three letters non-null same
+    a,a,a,d -> 0,a,2a,d
+    a,b,a,a -> 0,a,b,2a
+    a,b,b,b -> 0,a,b,2b
+    a,a,c,a -> 0,2a,c,a
+    
+    # 1 zero somewhere, all letters different
+    0,b,c,d -> 0,b,c,d
+    a,0,c,d -> 0,a,c,d
+    a,b,0,d -> 0,a,b,d
+    a,b,c,0 -> 0,a,b,c
+
+    # 2 zeros somewhere, all letters different
+    0,0,c,d -> 0,0,c,d
+    0,b,0,d -> 0,0,b,d
+    0,b,c,0 -> 0,0,b,c
+    a,0,0,d -> 0,0,a,d
+    a,0,c,0 -> 0,0,a,c
+    a,b,0,0 -> 0,0,a,b
+
+    # 3 zero somewhere, all letters different
+    0,0,0,d -> 0,0,0,d
+    0,0,c,0 -> 0,0,0,c
+    0,b,0,0 -> 0,0,0,b
+    a,0,0,0 -> 0,0,0,a
+
+    #4 zero somewhere, all letters different
+    0,0,0,0 -> 0,0,0,0
+    
+    #1 zero somewhere, two letters same
+    0,b,b,d -> 0,0,2b,d
+    0,b,c,b -> 0,b,c,b
+    0,b,c,c -> 0,0,b,2c
+    a,0,a,d -> 0,0,2a,d
+    a,0,c,a -> 0,a,c,a
+    a,0,c,c -> 0,0,a,2c
+    a,a,0,d  -> 0,0,2a,d
+    a,b,0,a -> 0,a,b,a
+    a,b,0,b -> 0,0,a,2b
+    a,a,c,0 -> 0,0,2a,c
+    a,b,a,0 -> 0,a,b,a
+    a,b,b,0 -> 0,0,a,2b
+    
+    #1 zero somewhere, three letters same
+    0,b,b,b -> 0,0,b,2b
+    a,0,a,a -> 0,0,a,2a
+    a,a,0,a -> 0,0,a,2a
+    a,a,a,0 -> 0,0,a,2a
+    
+    #2 zero somewhere, two letters same
+    0,0,c,c -> 0,0,0,2c
+    0,b,0,b -> 0,0,0,2b
+    0,b,b,0 -> 0,0,0,2b
+    a,0,0,a -> 0,0,0,2a
+    a,0,a,0 -> 0,0,0,2a
+    a,a,0,0 -> 0,0,0,2a 
+  `
+    .split("\n")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0 && !x.startsWith("#"))
+    .map((x) => x.split("->").map((x) => x.trim()));
+
+  /**
+   * @type {Array<
+   * test_scenario,
+   * expected_output_pattern,
+   * test_inputs,
+   * actual_test_results,
+   * expected_test_results>}
+   */
+  const test_results = oracle_tests.map(
+    ([test_scenario, expected_output_pattern]) => {
+      const test_inputs = Array(sample_size)
+        .fill(0)
+        .map((i) => {
+          return test_scenario.split(",").reduce(
+            (acc, char) => {
+              let draw;
+
+              if (char === "0") {
+                acc.test_case.push(0);
+              } else {
+                if (acc.vars[char] === undefined) {
+                  // draw a number that is not already in the vars
+                  while (true) {
+                    draw = Math.pow(2, Math.floor(Math.random() * 10) + 1);
+                    if (!Object.values(acc.vars).includes(draw)) {
+                      break;
+                    }
+                  }
+                  acc.vars[char] = draw;
+                  acc.test_case.push(draw);
+                } else {
+                  acc.test_case.push(acc.vars[char]);
+                }
+              }
+              return acc;
+            },
+            { test_case: [], vars: {} }
+          );
+        });
+
+      const actual_test_results = test_inputs.map(({ test_case }) =>
+        collapse_to_the_right(test_case)
+      );
+
+      const expected_test_results = test_inputs.map(({ vars }) => {
+        // e.g. output_pattern = '0,0,2a,2a'
+        // check that the test results follow the expected output pattern according to the vars value
+        return expected_output_pattern
+          .split(",")
+          .map((x) => x.trim())
+          .map((x) => {
+            if (x === "0") {
+              return 0;
+            } else {
+              // parse and compute the expected pattern
+              const { number, letter } = x
+                .trim()
+                .split("")
+                .reduce(
+                  (acc, char) => {
+                    if (char > "0" && char <= "9") {
+                      acc.number = acc.number * 10 + parseInt(char);
+                    } else {
+                      acc.letter = char;
+                    }
+                    return acc;
+                  },
+                  { number: 0, letter: "" }
+                );
+
+              return letter ? (number === 0 ? 1 : number) * vars[letter] : 0;
+            }
+          });
+      });
+
+      return [
+        test_scenario,
+        expected_output_pattern,
+        test_inputs,
+        actual_test_results,
+        expected_test_results,
+      ];
+    }
+  );
+
+  QUnit.module("Oracle testing", function (hooks) {
+    test_results.forEach(
+      ([
+        test_scenario,
+        expected_output_pattern,
+        test_inputs,
+        actual_test_results,
+        expected_test_results,
+      ]) => {
+        //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
+        QUnit.test(
+          `Input of the shape ${test_scenario} should output ${expected_output_pattern}`,
+
+          function (assert) {
+            test_inputs.forEach(({ test_case }, i) => {
+              assert.deepEqual(
+                actual_test_results[i],
+                expected_test_results[i],
+                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
+              );
+            });
+          }
+        );
+      }
+    );
+  });
+
+  QUnit.module("Property-based testing", function (hooks) {
+    // 1. besides the zero array, every output has 0s only on the left side or has no zero at all (compactness property)
+    // 2. the sum of the array in the input matches the sum in the output (invariance property)
+    // 3. If non-zero numbers in the input are powers of 2, all non-zero numbers of the output are powers of 2
+    // 4. if there are zeros on the left side in the input, those same zeros are also present in the output
+    // 5. the number of zeros in the output is equal or superior to the number of zeros in the input
+    // 6. The smallest non-zero number of the output is equal or superior to the smallest non-zero number in the input
+
+    QUnit.test(
+      "Besides the zero array, every output has 0s only on the left side or has no zero at all (compactness property)",
+      function (assert) {
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              if (test_case.every((x) => x === 0)) return;
+
+              const has_zero_only_on_left_side =
+                actual_test_results[i].reduce((acc, x) => {
+                  // Mini 3-state state machine
+                  if (x === 0 && acc === 0) return 0;
+                  if (x !== 0 && acc === 0) return 1;
+                  if (x === 0 && acc === 1) return -1;
+                  return acc;
+                }, 0) !== -1;
+
+              assert.ok(
+                has_zero_only_on_left_side,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills property`
+              );
+            });
+          }
+        );
+      }
+    );
+
+    QUnit.test(
+      "The sum of the input array matches the sum in the output array (invariance property)",
+      function (assert) {
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              const matching_sum =
+                test_case.reduce((acc, x) => acc + x, 0) ===
+                actual_test_results[i].reduce((acc, x) => acc + x, 0);
+              assert.ok(
+                matching_sum,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills the invariance property`
+              );
+            });
+          }
+        );
+      }
+    );
+
+    function is_power_of_2(unsigned_int) {
+      return unsigned_int === 1 || (unsigned_int & (unsigned_int - 1)) === 0;
+    }
+
+    QUnit.test(
+      "If non-zero numbers in the input are powers of 2, all non-zero numbers of the output are powers of 2",
+      function (assert) {
+        // NOTE: By construction, we know that all numbers in the input are powers of 2
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              const are_all_powers_of_2 =
+                test_case.every((x) => x == 0 || is_power_of_2(x)) &&
+                actual_test_results[i].every((x) => x == 0 || is_power_of_2(x));
+              assert.ok(
+                are_all_powers_of_2,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills the property`
+              );
+            });
+          }
+        );
+      }
+    );
+
+    function get_left_side_zeros(test_case) {
+      let number_of_zeros_in_left_side_of_input = 0,
+        j = 0;
+      do {
+        if (test_case[j] === 0) number_of_zeros_in_left_side_of_input++;
+        else break;
+      } while (test_case[++j]);
+      return number_of_zeros_in_left_side_of_input;
+    }
+
+    QUnit.test(
+      "if there are zeros on the left side in the input, those same zeros are also present in the output",
+      function (assert) {
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              const number_of_zeros_in_left_side_of_input =
+                get_left_side_zeros(test_case);
+              const number_of_zeros_in_left_side_of_output =
+                get_left_side_zeros(actual_test_results[i]);
+              const are_zeros_preserved =
+                number_of_zeros_in_left_side_of_input <=
+                number_of_zeros_in_left_side_of_output;
+              assert.ok(
+                are_zeros_preserved,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills the property`
+              );
+            });
+          }
+        );
+      }
+    );
+
+    QUnit.test(
+      "the number of zeros in the output is equal or superior to the number of zeros in the input",
+      function (assert) {
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              const number_of_zeros_in_input = test_case.reduce(
+                (acc, x) => acc + (x === 0 ? 1 : 0),
+                0
+              );
+              const number_of_zeros_in_output = actual_test_results[i].reduce(
+                (acc, x) => acc + (x === 0 ? 1 : 0),
+                0
+              );
+              const are_zeros_preserved =
+                number_of_zeros_in_input <= number_of_zeros_in_output;
+              assert.ok(
+                are_zeros_preserved,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills the property`
+              );
+            });
+          }
+        );
+      }
+    );
+
+    QUnit.test(
+      "The smallest non-zero number of the output is equal or superior to the smallest non-zero number in the input",
+      function (assert) {
+        test_results.forEach(
+          ([
+            test_scenario,
+            expected_output_pattern,
+            test_inputs,
+            actual_test_results,
+            expected_test_results,
+          ]) => {
+            test_inputs.forEach(({ test_case }, i) => {
+              const smallest_number_in_input = test_case.reduce(
+                (acc, x) => (x !== 0 ? (x < acc ? x : acc) : acc),
+                Infinity
+              );
+              const smallest_number_in_output = actual_test_results[i].reduce(
+                (acc, x) => (x !== 0 ? (x < acc ? x : acc) : acc),
+                Infinity
+              );
+              assert.ok(
+                smallest_number_in_input <= smallest_number_in_output,
+                `Inputs ${test_case} swipes to ${actual_test_results[i]}, which fulfills the property`
+              );
+            });
+          }
+        );
+      }
+    );
+  });
 });

@@ -97,7 +97,9 @@ Quick properties of this algorithm:
 - 2 and 3 ensure that all 0s appear the left side
 
 ## Rendering
-No specific issue here, whatever data structure we use to keep the board state, we need to extract the four rows from it, compute the swiped rows, and put that back in the board. If we extract the board state right then, the new four rows we recover should be our computed four rows exactly.
+No specific issue here:
+- set swipe right key event handler
+- when swipe right, extract the four rows of the board, compute the swiped rows, and put that back in the board. If we extract the board state right then, the new four rows we recover should be our computed four rows exactly.
 
 # Tests
 - while our algorithm seems correct at first glance, it cannot be used as a definition of the rules, which are given in plain language. An alternative strategy is to check the algorithm on concrete cases. Full correctness can be proven by exhausting the test space.
@@ -133,11 +135,13 @@ Here are the cases with their corresponding results (different letters mean diff
     a,b,a,a -> 0,a,b,2a
     a,b,b,b -> 0,a,b,2b
     a,a,c,a -> 0,2a,c,a
+
     # 1 zero somewhere, all letters different
     0,b,c,d -> 0,b,c,d
     a,0,c,d -> 0,a,c,d
     a,b,0,d -> 0,a,b,d
     a,b,c,0 -> 0,a,b,c
+
     # 2 zeros somewhere, all letters different
     0,0,c,d -> 0,0,c,d
     0,b,0,d -> 0,0,b,d
@@ -145,11 +149,13 @@ Here are the cases with their corresponding results (different letters mean diff
     a,0,0,d -> 0,0,a,d
     a,0,c,0 -> 0,0,a,c
     a,b,0,0 -> 0,0,a,b
+
     # 3 zero somewhere, all letters different
     0,0,0,d -> 0,0,0,d
     0,0,c,0 -> 0,0,0,c
     0,b,0,0 -> 0,0,0,b
     a,0,0,0 -> 0,0,0,a
+
     #4 zero somewhere, all letters different
     0,0,0,0 -> 0,0,0,0
     
@@ -205,8 +211,50 @@ That is a lot of tests :-) Depending on our confidence and time target, we could
 - ast reason, in case we made a mistake in some of our oracle tests (would not be strange in a set of 52 cases), the PBT makes it more likely to find them.
 
 
-# Screenshots
+## UI testing
+At this stage of the implementation, we can't really test exhaustively that the screen is correctly updated as we are limited to the initial stage where the board has only two numbers on it. There are a number of options to remeediate that:
+- require that the implementation expose a render function that takes the state of the board as input
+- set the state of the board ourselves in the test function
+- just accept that we are testing only the initial state of the game and update the requirement under test accordingly. So this requirement would become two requirements, one applying only at start, and the other in later stage of the games. That is probably the best course till we have implemented the other swipes. We will then be able to play and create any state on the board.
 
+ADR:
+  - we pick the last option.
+  - Pros:
+    - we don't increase the testing of implementation details (how rendering is made is an implementation detail that should not be subject or coupled to test)
+    - Implementation details may have to change in the future as a result of change in requirements, invalidating our tests.
+    - Simulating user events gives more confidence over the right behavior of the application
+    - 
+  - Cons:
+    - setting the state of the board directly is a convenient strategy. The entire state of this application can be locally stored (no remote database needed, no local storage needed) and instrumented without dependency injection (DOM is a global variable). 
+
+
+Half-way into the implementation, I actually changed my mind :-)
+
+ADR (updated):
+- We will impose that the implementation be organized around three modules: event module, behavior module, and effect module
+  - event module: emit an event as a result of a user action (user clicks on new game button, user swipes right)
+  - behaviour module: receive an event, updates the application state, executes some effects, and return the update state and effects being run
+    - the behaviour module is parameterized by the effect module which runs the computed effects
+    - this is useful for instance to stub external systems such as database or local storage - none of which are used here
+    - so not sure if I will use it here - it is not really much work though to add the extra parameter
+  - effect module: receives a command from the behavior module to run a preregistered effect and does that
+- We will impose lenses that take the application state and return the pieces of state of interest
+
+- Pros:
+  - the previous ADR is actually hard to implement and the benefits mentioned in there outweigh the benefits. Simulating a swipe right is not simple enough to be implemented reliably by this humble servant. There are not so many libraries, using them add a dependency to the project, possible bugs/quirks/limitations, and a permanent duty of maintenance (security, updates, bug fixing, etc.). 
+  - We can instrument the entire application without having to simulate real user events. E.g., instead of simulating a swipe, we can run the behavior module with a swipe right event or even a swipe event paramterized by the swipe direction
+  - Because we can get the updated state of the application as output, we can also test that the board was updated correctly if we know how toget the board state from the application state.
+  - So we'll have to impose lenses over the application state to get the pieces of state that we are interested in. Those lenses have to be exposed by the implementation. Those implementation details thus become part of the technical specifications of the application.
+  - Because the behavior module runs the effects, we will see the screen being updated for every UI test which will help debugging when a test goes wrong.
+  - Oh but we will them require the application to expose a render function that we can use as is. Well if the only effect is rendering, then maybe we don't need an effect module. I'll see while doing.
+- Cons:
+  - well as mentioned before, we are testing implementation details now. So if we change the name or the type of an event in the implementation, then our tests will fail. With a good IDE, this should be manageable however --- if only the implementation detail but not the requirement themselves.
+  - we don't actually need to store state in the application memory, all the state we need could be kept in the DOM. So in some ways, we are wasting memory. We don't think that is a big issue. But that has to be assessed as part of the acceptance testing (cf. non-functional requirements).
+  - We still have to test that actual user events are indeed sending the expected events with the expected parameters to the behavior module! We'll do that manually and think about something better later.
+
+
+# Screenshots
+- ![](./screenshots/swipe%20right%20computation%20tests%20passing.png)
 
 # Room for improvement
 - As mentioned in [ADR](#adr), we have not actually properly tested that the cells in the start game are appearing with the required frequency.
@@ -215,7 +263,9 @@ That is a lot of tests :-) Depending on our confidence and time target, we could
 ## CSS
 
 ## JS
-
+- be careful about destructive updates. Wasted time for failing tests due to destructive update of test parameter!
+- be careful about order [c,d] -> pop will give d first, not c. Sounds stupid but I accepted AI's completion and I lost 20mn there.
+- AI proposed perfect code completions for simple mouse gestures -> real time saving
 
 ## AI
 
@@ -224,3 +274,6 @@ That is a lot of tests :-) Depending on our confidence and time target, we could
 - Use gray box testing when its value overweighs its tradeoff. 100s of UI testing replaced by 100s of pure function testing can be such a case. But pick the option not by laziness but because it makes sense vs. the alternative. 
   - In the current case, we tested the swipe right algorithm on a pure function rather than an actual game board instrumented through automated tests because of the cost that there is in putting the board in a specific state. It is not clear if that is even possible at this stage, given that we haven't developed the game yet so the board can be put in any state through user actions.
   - In a previous case, where we tested the frequency of appearance of 2 and 4 in the initial stage of the game, it was more laziness that took over. It was not too much effort to click a hundred times the new game button and collect the initial cells. We'll leave it like that though and move on.
+- The tests in this branch are actually way too many. I did not follow my own rules to limit complexity of testing. Also, I chose to implement the 52 cases by implementing a mini parser, which is not the simplest approach, and unavoidably I made some mistakes in there and wasted some time. It is cool to be able to write the expected pattern as [0,0,2a,2a]. It is also faster than directly having to write 52 tests. Still the extra complexity caused bugs. Sth to keep in mind for the future. If any test have an internal function that must be tested (which is what it was) then test them directly in the test harness.
+- Also once again, I was fooled by AI and failed to find errors in its provided code!
+  Some test inputs will be common to several modules. Not always possible to anticipate this, but when that happens, a good idea is to separate the elaboration of test inputs from the tests execution. In the same way, most test harnesses allow separating fixtures that could be reused in their own location (can be another file, another function, at the top level of the same file etc.). 
