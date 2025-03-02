@@ -280,6 +280,10 @@ ADR:
 - be careful about destructive updates. Wasted time for failing tests due to destructive update of test parameter!
 - be careful about order [c,d] -> pop will give d first, not c. Sounds stupid but I accepted AI's completion and I lost 20mn there.
 - AI proposed perfect code completions for simple mouse gestures -> real time saving
+- The refactoring that was made on the spot towards a more functional design that separates events from event handlers from effects runners prove to be slightly challenging to refactor. The key issue is to keep everything in one's head. Better option is always to write it down first, which was only incompletely done in this present file.
+- Well, it's never too late so here it goes:
+
+![Application architecture overview](./wireframes/application_architecture.png)
 
 ## AI
 - To avoid being stuck with parenthesis not closing after AI completion, when AI stops on an open bracket/parenthesis/etc. close that first so there is always good syntax, before accepting completions. The completion will come back, it is not lost. You can accept
