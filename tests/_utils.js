@@ -41,3 +41,7 @@ export function check_generator(
   // Determine if the Chi-Square statistic exceeds the critical value for the given p-value
   return chiSquareStat < chiSquareCriticalValue ? 1 : 0;
 }
+
+export function are_array_deep_equal(arr1, arr2){
+  return arr1.join(",") === arr2.join(",");
+}

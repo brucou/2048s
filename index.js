@@ -157,7 +157,9 @@ export function start_new_game(deps) {
   ] = get_starting_cells(random_generator);
 
   // Copy the initial state (no destructive update!)
-  const board_state = lenses.get_board_state(INIT_APP_STATE).map((row, i) => [].concat(row));
+  const board_state = lenses
+    .get_board_state(INIT_APP_STATE)
+    .map((row, i) => [].concat(row));
 
   board_state[first_cell_x][first_cell_y] = first_cell_value;
   board_state[second_cell_x][second_cell_y] = second_cell_value;
@@ -195,7 +197,11 @@ export function get_current_score() {
 
 export function get_ui_elements() {
   const new_game_button = document.querySelector("#new-game-button");
-  const cell_elements = [0, 1, 2, 3].map((i) => [0,1,2,3].map((j) => document.querySelector(`[data-row="${i}"][data-col="${j}"]`) ));
+  const cell_elements = [0, 1, 2, 3].map((i) =>
+    [0, 1, 2, 3].map((j) =>
+      document.querySelector(`[data-row="${i}"][data-col="${j}"]`)
+    )
+  );
   const best_score_el = document.querySelector("#best-score-amount");
   const current_score_el = document.querySelector("#current-score-amount");
 
@@ -205,7 +211,7 @@ export function get_ui_elements() {
 export let elements;
 
 export function render(app_state, event_payload) {
-  const {emitter} = events;
+  const { emitter } = events;
 
   if (app_state === INIT_APP_STATE) {
     // That's the first render of tha app
@@ -249,7 +255,10 @@ export function render(app_state, event_payload) {
         end_y = event.clientY;
 
         // Check if the swipe was to the right
-        if (end_x > start_x && Math.abs(end_x - start_x) > Math.abs(end_y - start_y)) {
+        if (
+          end_x > start_x &&
+          Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
+        ) {
           emitter("COLLAPSE_TO_THE_RIGHT", void 0);
         }
       }
@@ -260,7 +269,7 @@ export function render(app_state, event_payload) {
   } else {
     // Update the UI
     const board_state = lenses.get_board_state(app_state);
-    const best_score = lenses.get_best_score(app_state); 
+    const best_score = lenses.get_best_score(app_state);
     const current_score = lenses.get_current_score(app_state);
     const { cell_elements, best_score_el, current_score_el } = elements;
 
@@ -302,39 +311,46 @@ export const lenses = {
 };
 
 // Setting a dummy variable for strict equality checking of non existing subscriptions
-const empty_array=[];
+const empty_array = [];
 export const noop = () => empty_array;
 
 export const behavior = {
   effects: {
-    "RENDER": render
+    RENDER: render,
   },
   global_listener: (event) => {
     // Both should be undefined if and only if the event is not in the subscriptions
     // DOC: this means that subscriptions are not allowed to return undefined as updated state
     // DOC: also the updated_state should be a new object (i.e., not the same reference as the old state)
-    const x = (events.subscriptions[event.type] || noop)(event.detail, app_state);
+    const x = (events.subscriptions[event.type] || noop)(
+      event.detail,
+      app_state
+    );
 
     if (x === empty_array) {
       console.warn(`The event ${event.type} has no subscription configured!`);
       return;
-    };
+    }
 
     const [updated_state, effects] = x;
 
     try {
-          // Update the app state
-    app_state = updated_state;
+      // Update the app state
+      app_state = updated_state;
 
-    // Execute the effects
-      effects.forEach((effect) => behavior.effects[effect](app_state, event.detail));
-    }
-    catch (e) {
-      console.error(`Either the effect handlers for ${effects} failed, or one of such handlers is missing!`);
+      // Execute the effects
+      effects.forEach((effect) =>
+        behavior.effects[effect](app_state, event.detail)
+      );
+    } catch (e) {
+      console.error(
+        `Either the effect handlers for ${effects} failed, or one of such handlers is missing!`
+      );
       console.error(e);
     }
-  }
+  },
 };
+
 export const events = {
   emitter: function (event_type, event_payload) {
     const event = new CustomEvent(event_type, { detail: event_payload });
@@ -342,20 +358,16 @@ export const events = {
   },
   // Subscriptions returns the new state and the effects to be executed
   subscriptions: {
-    // TODO new return type
-    INITIALIZE_APP: (_, __) => ([INIT_APP_STATE, ["RENDER"]]),
-    // TODO new return type
+    INITIALIZE_APP: (_, __) => [INIT_APP_STATE, ["RENDER"]],
     START_NEW_GAME: (_, __) => start_new_game({ random_generator }),
-    // TODO: I need to update render or the listener to have access to the old state and the new one and I need to return the new state
     COLLAPSE_TO_THE_RIGHT: (_, app_state) => {
       const board_state = lenses.get_board_state(app_state);
       const new_board_state = board_state.map(collapse_to_the_right);
 
       return [lenses.set_board_state(new_board_state, app_state), ["RENDER"]];
-    }
+    },
   },
 };
-
 
 // Subscribe to events
 Object.keys(events.subscriptions).forEach((event_type) => {

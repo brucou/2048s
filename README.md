@@ -244,13 +244,27 @@ ADR (updated):
   - the previous ADR is actually hard to implement and the benefits mentioned in there outweigh the benefits. Simulating a swipe right is not simple enough to be implemented reliably by this humble servant. There are not so many libraries, using them add a dependency to the project, possible bugs/quirks/limitations, and a permanent duty of maintenance (security, updates, bug fixing, etc.). 
   - We can instrument the entire application without having to simulate real user events. E.g., instead of simulating a swipe, we can run the behavior module with a swipe right event or even a swipe event paramterized by the swipe direction
   - Because we can get the updated state of the application as output, we can also test that the board was updated correctly if we know how toget the board state from the application state.
-  - So we'll have to impose lenses over the application state to get the pieces of state that we are interested in. Those lenses have to be exposed by the implementation. Those implementation details thus become part of the technical specifications of the application.
+  - So we'll have to impose lenses over the application state to get the pieces of state that we are interested in. Those lenses have to be exposed by the implementation. Those implementation details thus become part of the technical specifications of the application. Lenses still allow to abstract over the implementation details related to the exact shape of the application state. E.g., if the board state is stored differently or in another property, we only change the lens, not every test that relies on a specific shape.
   - Because the behavior module runs the effects, we will see the screen being updated for every UI test which will help debugging when a test goes wrong.
   - Oh but we will them require the application to expose a render function that we can use as is. Well if the only effect is rendering, then maybe we don't need an effect module. I'll see while doing.
 - Cons:
   - well as mentioned before, we are testing implementation details now. So if we change the name or the type of an event in the implementation, then our tests will fail. With a good IDE, this should be manageable however --- if only the implementation detail but not the requirement themselves.
   - we don't actually need to store state in the application memory, all the state we need could be kept in the DOM. So in some ways, we are wasting memory. We don't think that is a big issue. But that has to be assessed as part of the acceptance testing (cf. non-functional requirements).
   - We still have to test that actual user events are indeed sending the expected events with the expected parameters to the behavior module! We'll do that manually and think about something better later.
+
+Half-way through the implementation another update :-)
+
+ADR:
+- user actions trigger changes in the application state and effect execution. We could impose a functional design revolving around a function that takes a user event and return only **data** instead of actually running effects, and updating the application state.
+- That design however means that we now then have to test also that a given application state matches the corresponding UI state. To do that, we don't need lenses on the application state, and lenses on the UI state. E.g., we need a function that takes the whole application state and returns just the board state, and another function that takes the browser's UI and returns the displayed board state. As mentioned, those lenses protect us from low-level implementation details.
+- it is a coin toss but I think that for this specific application it is better to directly query the UI state and skip checking the application state update
+- Pros:
+  - it is faster (less tests). 
+  - tests are depending on UI specifications (e.g., selector name for the create game button etc.) but not on application state design or specification. Which is the best situation for us.
+  - we are running tests in a real browser and the application is simple enough that it is not costly to restart the application. The decoupling between application state and UI state does brings good benefits when testing application is fast, and testing UI state is slow. For instance, if you follow a test strategy that requires spawning a new browser instance for every test... 
+  - In short we have not too much cost, and good benefits
+- Cons:
+  - Application may grow, specifications may increase in volume, and it may make sense at some point to have a separate person/tool testing the relationship between application state and UI state. The productivity of that person is higher in a design that isolate and reify that relationship.
 
 
 # Screenshots
@@ -268,7 +282,7 @@ ADR (updated):
 - AI proposed perfect code completions for simple mouse gestures -> real time saving
 
 ## AI
-
+- To avoid being stuck with parenthesis not closing after AI completion, when AI stops on an open bracket/parenthesis/etc. close that first so there is always good syntax, before accepting completions. The completion will come back, it is not lost. You can accept
 
 ## Testing
 - Use gray box testing when its value overweighs its tradeoff. 100s of UI testing replaced by 100s of pure function testing can be such a case. But pick the option not by laziness but because it makes sense vs. the alternative. 
@@ -277,3 +291,6 @@ ADR (updated):
 - The tests in this branch are actually way too many. I did not follow my own rules to limit complexity of testing. Also, I chose to implement the 52 cases by implementing a mini parser, which is not the simplest approach, and unavoidably I made some mistakes in there and wasted some time. It is cool to be able to write the expected pattern as [0,0,2a,2a]. It is also faster than directly having to write 52 tests. Still the extra complexity caused bugs. Sth to keep in mind for the future. If any test have an internal function that must be tested (which is what it was) then test them directly in the test harness.
 - Also once again, I was fooled by AI and failed to find errors in its provided code!
   Some test inputs will be common to several modules. Not always possible to anticipate this, but when that happens, a good idea is to separate the elaboration of test inputs from the tests execution. In the same way, most test harnesses allow separating fixtures that could be reused in their own location (can be another file, another function, at the top level of the same file etc.). 
+
+- Because we design for testing first hand, we need to think about both test strategy and design early. Which means thinking about implementation design. Which is ultimately the value of TDD. Not so much that you write the test first. But that you structure and design your application so it can be tested before you start implementing it. Implementing something and then trying to write some tests somehow when no infrastructure was designed for it creates incentives to do less tests: tests cost more to write, run, and have to be updated more often as they tend to depend on implementation details.
+

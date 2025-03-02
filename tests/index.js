@@ -8,20 +8,14 @@ import {
   get_ui_elements,
   events,
 } from "../index.js";
-import { check_generator } from "../tests/_utils.js";
-
-QUnit.testStart(({ name, module, testId, previousFailure }) => {
-  if (module.trim().startsWith("(UI)")) {
-    console.debug(`Running test ${testId} '${name}'`);
-
-    events.emitter("INITIALIZE_APP", { detail: void 0 });
-  }
-});
+import { check_generator, are_array_deep_equal } from "../tests/_utils.js";
 
 QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User navigates to the game page and sees the initial screen",
     function (assert) {
+      events.emitter("INITIALIZE_APP", { detail: void 0 });
+
       const board_state = get_board_state();
       const current_score = get_current_score();
       const best_score = get_best_score();
@@ -46,6 +40,7 @@ QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User clicks on the new game button and the game starts, with two distint cells on the board, and a zero score",
     function (assert) {
+      events.emitter("INITIALIZE_APP", { detail: void 0 });
       events.emitter("START_NEW_GAME", { detail: void 0 });
 
       const board_state = get_board_state();
@@ -633,5 +628,36 @@ QUnit.module("Collapse a row to the right", function (hooks) {
         );
       }
     );
+  });
+
+  QUnit.module("(UI) Swipe updates the board", function (hooks) {
+    const sample_size = 100;
+
+    Array(sample_size)
+      .fill(0)
+      .forEach((_) => {
+        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("START_NEW_GAME", { detail: void 0 });
+        const board_state_before = get_board_state();
+        const best_score_before = get_best_score();
+        const current_score_before = get_current_score();
+
+        events.emitter("COLLAPSE_TO_THE_RIGHT", { detail: void 0 });
+        const board_state_after = get_board_state();
+        const current_score_after = get_current_score();
+        const best_score_after = get_best_score();
+
+        QUnit.test(
+          "Swiping to the right does swipe the board to the right",
+          function (assert) {
+            board_state_after.every((row, i) => {
+              // Given that collapse_to_the_right was previously tested, it can be used here as oracle
+              assert.ok(are_array_deep_equal(row, collapse_to_the_right(board_state_before[i])),
+                "The board is swiped to the right"
+              );
+            });
+          }
+        );
+      });
   });
 });
