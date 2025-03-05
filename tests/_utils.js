@@ -45,3 +45,9 @@ export function check_generator(
 export function are_array_deep_equal(arr1, arr2){
   return arr1.join(",") === arr2.join(",");
 }
+
+export function transpose (array_of_arrays) {
+  return array_of_arrays.map((row, i) =>
+    row.map((_, j) => array_of_arrays[j][i])
+  );
+} 
