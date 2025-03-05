@@ -164,7 +164,7 @@ export function compute_score_after_collapse(_row) {
 
   if (length === 2) {
     let [c, d] = row;
-    return (c === d && c !== 0) ? 2 * c : 0;
+    return c === d && c !== 0 ? 2 * c : 0;
   }
 
   if (length > 2) {
@@ -192,7 +192,7 @@ export function compute_score_after_collapse(_row) {
       }
     }
   }
-  
+
   return 0;
 }
 
@@ -354,7 +354,12 @@ export const lenses = {
   get_board_state: (app_state) => app_state.board_state,
   set_board_state: (board_state, app_state) => ({ ...app_state, board_state }),
   get_best_score: (app_state) => app_state.best_score,
+  set_best_score: (best_score, app_state) => ({ ...app_state, best_score }),
   get_current_score: (app_state) => app_state.current_score,
+  set_current_score: (current_score, app_state) => ({
+    ...app_state,
+    current_score,
+  }),
 };
 
 // Setting a dummy variable for strict equality checking of non-existing subscriptions
@@ -363,8 +368,8 @@ export const noop = () => empty_array;
 
 /**
  * The behavior object contains the effects that can be triggered by the events.
- * It also contains a `global_listener` that listens to all configured events, 
- * triggers the matching event handler (if any). It then takes the updated 
+ * It also contains a `global_listener` that listens to all configured events,
+ * triggers the matching event handler (if any). It then takes the updated
  * application state and effects to execute computed by the event handler and
  * thus updates the application state and executes the effects.
  */
@@ -417,8 +422,21 @@ export const events = {
     COLLAPSE_TO_THE_RIGHT: (_, app_state) => {
       const board_state = lenses.get_board_state(app_state);
       const new_board_state = board_state.map(collapse_to_the_right);
+      const score_points = board_state.reduce(
+        (acc, row) => acc + compute_score_after_collapse(row),
+        0
+      );
+      const new_score = lenses.get_current_score(app_state) + score_points;
+      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
 
-      return [lenses.set_board_state(new_board_state, app_state), ["RENDER"]];
+      const updated_state = lenses.set_board_state(
+        new_board_state,
+        lenses.set_current_score(
+          new_score,
+          lenses.set_best_score(best_score, app_state)
+        )
+      );
+      return [updated_state, ["RENDER"]];
     },
   },
 };

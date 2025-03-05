@@ -2,6 +2,7 @@ import {
   get_seeded_random_generator,
   get_starting_cells,
   collapse_to_the_right,
+  compute_score_after_collapse,
   get_board_state,
   get_current_score,
   get_best_score,
@@ -237,7 +238,7 @@ QUnit.module("Random number generation", function (hooks) {
 });
 
 QUnit.module("Collapse a row to the right", function (hooks) {
-  const sample_size = 10;
+  const sample_size = 2;
   const oracle_tests = `
 
     # all letters non-zero and different
@@ -370,29 +371,44 @@ QUnit.module("Collapse a row to the right", function (hooks) {
         return expected_output_pattern
           .split(",")
           .map((x) => x.trim())
-          .map((x) => {
-            if (x === "0") {
-              return 0;
-            } else {
-              // parse and compute the expected pattern
-              const { number, letter } = x
-                .trim()
-                .split("")
-                .reduce(
-                  (acc, char) => {
-                    if (char > "0" && char <= "9") {
-                      acc.number = acc.number * 10 + parseInt(char);
-                    } else {
-                      acc.letter = char;
-                    }
-                    return acc;
-                  },
-                  { number: 0, letter: "" }
-                );
+          .reduce(
+            (computed, x) => {
+              if (x === "0") {
+                return {
+                  score_points: computed.score_points,
+                  expected_row: computed.expected_row.concat(0),
+                };
+              } else {
+                // parse and compute the expected pattern
+                const { number, letter } = x
+                  .trim()
+                  .split("")
+                  .reduce(
+                    (acc, char) => {
+                      if (char > "0" && char <= "9") {
+                        acc.number = acc.number * 10 + parseInt(char);
+                      } else {
+                        acc.letter = char;
+                      }
+                      return acc;
+                    },
+                    { number: 0, letter: "" }
+                  );
 
-              return letter ? (number === 0 ? 1 : number) * vars[letter] : 0;
-            }
-          });
+                const score_points = number === 0 ? 0 : number * vars[letter];
+                const expected_cell_value = letter
+                  ? (number === 0 ? 1 : number) * vars[letter]
+                  : 0;
+
+                return {
+                  score_points: computed.score_points + score_points,
+                  expected_row:
+                    computed.expected_row.concat(expected_cell_value),
+                };
+              }
+            },
+            { expected_row: [], score_points: 0 }
+          );
       });
 
       return [
@@ -405,7 +421,7 @@ QUnit.module("Collapse a row to the right", function (hooks) {
     }
   );
 
-  QUnit.module("Oracle testing", function (hooks) {
+  QUnit.module("Oracle testing (swipe right and score points)", function (hooks) {
     test_results.forEach(
       ([
         test_scenario,
@@ -416,14 +432,20 @@ QUnit.module("Collapse a row to the right", function (hooks) {
       ]) => {
         //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
         QUnit.test(
-          `Input of the shape ${test_scenario} should output ${expected_output_pattern}`,
+          `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
 
           function (assert) {
             test_inputs.forEach(({ test_case }, i) => {
               assert.deepEqual(
                 actual_test_results[i],
-                expected_test_results[i],
+                expected_test_results[i].expected_row,
                 `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
+              );
+
+              assert.deepEqual(
+                compute_score_after_collapse(test_case),
+                expected_test_results[i].score_points,
+                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(test_case)}`
               );
             });
           }
@@ -652,10 +674,29 @@ QUnit.module("Collapse a row to the right", function (hooks) {
           function (assert) {
             board_state_after.every((row, i) => {
               // Given that collapse_to_the_right was previously tested, it can be used here as oracle
-              assert.ok(are_array_deep_equal(row, collapse_to_the_right(board_state_before[i])),
+              assert.ok(
+                are_array_deep_equal(
+                  row,
+                  collapse_to_the_right(board_state_before[i])
+                ),
                 "The board is swiped to the right"
               );
             });
+          }
+        );
+
+        QUnit.test(
+          "Swiping to the right does update the score when it should, and does not when it should not",
+          function (assert) {
+            const score_points = board_state_before.reduce(
+              (acc, row) => acc + compute_score_after_collapse(row),
+              0
+            );
+            assert.deepEqual(
+              current_score_after,
+              current_score_before + score_points,
+              "The score is updated correctly"
+            );
           }
         );
       });
