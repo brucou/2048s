@@ -2,6 +2,7 @@ import {
   get_seeded_random_generator,
   get_starting_cells,
   collapse_to_the_right,
+  collapse_to_the_left,
   compute_score_after_collapse,
   get_board_state,
   get_current_score,
@@ -687,6 +688,273 @@ QUnit.module("Collapse a row to the right", function (hooks) {
 
         QUnit.test(
           "Swiping to the right does update the score when it should, and does not when it should not",
+          function (assert) {
+            const score_points = board_state_before.reduce(
+              (acc, row) => acc + compute_score_after_collapse(row),
+              0
+            );
+            assert.deepEqual(
+              current_score_after,
+              current_score_before + score_points,
+              "The score is updated correctly"
+            );
+          }
+        );
+      });
+  });
+});
+
+QUnit.module("Collapse a row to the left", function (hooks) {
+  const sample_size = 10;
+  const oracle_tests = `
+    # all letters non-zero and different
+    a,b,c,d -> a,b,c,d
+
+    # all letters non-zero and same
+    a,a,a,a -> 2a,2a, 0, 0
+
+    # two letter non-null same
+    a,a,c,d -> 2a,c,d,0
+    a,b,a,d -> a,b,a,d
+    a,b,c,a -> a,b,c,a
+    a,b,b,d -> a,2b,d,0
+    a,b,c,b -> a,b,c,b
+    a,b,c,c -> a,b,2c,0
+
+    a,a,c,c -> 2a,2c,0,0
+    a,b,a,b -> a,b,a,b
+    a,b,b,a -> a,2b,a,0
+
+    # three letters non-null same
+    a,a,a,d -> 2a,a,d,0
+    a,b,a,a -> a,b,2a,0
+    a,b,b,b -> a,2b,b,0
+    a,a,c,a -> 2a,c,a,0
+
+    # 1 zero somewhere, all letters different
+    0,b,c,d -> b,c,d,0
+    a,0,c,d -> a,c,d,0
+    a,b,0,d -> a,b,d,0
+    a,b,c,0 -> a,b,c,0
+
+    # 2 zeros somewhere, all letters different
+    0,0,c,d -> c,d,0,0
+    0,b,0,d -> b,d,0,0
+    0,b,c,0 -> b,c,0,0
+    a,0,0,d -> a,d,0,0
+    a,0,c,0 -> a,c,0,0
+    a,b,0,0 -> a,b,0,0
+
+    # 3 zero somewhere, all letters different
+    0,0,0,d -> d,0,0,0
+    0,0,c,0 -> c,0,0,0
+    0,b,0,0 -> b,0,0,0
+    a,0,0,0 -> a,0,0,0
+
+    #4 zero somewhere, all letters different
+    0,0,0,0 -> 0,0,0,0
+    
+    #1 zero somewhere, two letters same
+    0,b,b,d -> 2b,d,0,0
+    0,b,c,b -> b,c,b,0
+    0,b,c,c -> b,2c,0,0
+    a,0,a,d -> 2a,d,0,0
+    a,0,c,a -> a,c,a,0
+    a,0,c,c -> a,2c,0,0
+    a,a,0,d  -> 2a,d,0,0
+    a,b,0,a -> a,b,a,0
+    a,b,0,b -> a,2b,0,0
+    a,a,c,0 -> 2a,c,0,0
+    a,b,a,0 -> a,b,a,0
+    a,b,b,0 -> a,2b,0,0
+    
+    #1 zero somewhere, three letters same
+    0,b,b,b -> 2b,b,0,0
+    a,0,a,a -> 2a,a,0,0
+    a,a,0,a -> 2a,a,0,0
+    a,a,a,0 -> 2a,a,0,0
+    
+    #2 zero somewhere, two letters same
+    0,0,c,c -> 2c,0,0,0
+    0,b,0,b -> 2b,0,0,0
+    0,b,b,0 -> 2b,0,0,0
+    a,0,0,a -> 2a,0,0,0
+    a,0,a,0 -> 2a,0,0,0
+    a,a,0,0 -> 2a,0,0,0 
+  `
+    .split("\n")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0 && !x.startsWith("#"))
+    .map((x) => x.split("->").map((x) => x.trim()));
+
+  /**
+   * @type {Array<
+   * test_scenario,
+   * expected_output_pattern,
+   * test_inputs,
+   * actual_test_results,
+   * expected_test_results>}
+   */
+  const test_results = oracle_tests.map(
+    ([test_scenario, expected_output_pattern]) => {
+      const test_inputs = Array(sample_size)
+        .fill(0)
+        .map((i) => {
+          return test_scenario.split(",").reduce(
+            (acc, char) => {
+              let draw;
+
+              if (char === "0") {
+                acc.test_case.push(0);
+              } else {
+                if (acc.vars[char] === undefined) {
+                  // draw a number that is not already in the vars
+                  while (true) {
+                    draw = Math.pow(2, Math.floor(Math.random() * 10) + 1);
+                    if (!Object.values(acc.vars).includes(draw)) {
+                      break;
+                    }
+                  }
+                  acc.vars[char] = draw;
+                  acc.test_case.push(draw);
+                } else {
+                  acc.test_case.push(acc.vars[char]);
+                }
+              }
+              return acc;
+            },
+            { test_case: [], vars: {} }
+          );
+        });
+
+      const actual_test_results = test_inputs.map(({ test_case }) =>
+        collapse_to_the_left(test_case)
+      );
+
+      const expected_test_results = test_inputs.map(({ vars }) => {
+        // e.g. output_pattern = '0,0,2a,2a'
+        // check that the test results follow the expected output pattern according to the vars value
+        return expected_output_pattern
+          .split(",")
+          .map((x) => x.trim())
+          .reduce(
+            (computed, x) => {
+              if (x === "0") {
+                return {
+                  score_points: computed.score_points,
+                  expected_row: computed.expected_row.concat(0),
+                };
+              } else {
+                // parse and compute the expected pattern
+                const { number, letter } = x
+                  .trim()
+                  .split("")
+                  .reduce(
+                    (acc, char) => {
+                      if (char > "0" && char <= "9") {
+                        acc.number = acc.number * 10 + parseInt(char);
+                      } else {
+                        acc.letter = char;
+                      }
+                      return acc;
+                    },
+                    { number: 0, letter: "" }
+                  );
+
+                const score_points = number === 0 ? 0 : number * vars[letter];
+                const expected_cell_value = letter
+                  ? (number === 0 ? 1 : number) * vars[letter]
+                  : 0;
+
+                return {
+                  score_points: computed.score_points + score_points,
+                  expected_row:
+                    computed.expected_row.concat(expected_cell_value),
+                };
+              }
+            },
+            { expected_row: [], score_points: 0 }
+          );
+      });
+
+      return [
+        test_scenario,
+        expected_output_pattern,
+        test_inputs,
+        actual_test_results,
+        expected_test_results,
+      ];
+    }
+  );
+
+  QUnit.module("Oracle testing (swipe left and score points)", function (hooks) {
+    test_results.forEach(
+      ([
+        test_scenario,
+        expected_output_pattern,
+        test_inputs,
+        actual_test_results,
+        expected_test_results,
+      ]) => {
+        //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
+        QUnit.test(
+          `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
+
+          function (assert) {
+            test_inputs.forEach(({ test_case }, i) => {
+              assert.deepEqual(
+                actual_test_results[i],
+                expected_test_results[i].expected_row,
+                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
+              );
+
+              assert.deepEqual(
+                compute_score_after_collapse(test_case),
+                expected_test_results[i].score_points,
+                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(test_case)}`
+              );
+            });
+          }
+        );
+      }
+    );
+  });
+
+  QUnit.module("(UI) Swipe left updates the board", function (hooks) {
+    const sample_size = 100;
+
+    Array(sample_size)
+      .fill(0)
+      .forEach((_) => {
+        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("START_NEW_GAME", { detail: void 0 });
+        const board_state_before = get_board_state();
+        const best_score_before = get_best_score();
+        const current_score_before = get_current_score();
+
+        events.emitter("COLLAPSE_TO_THE_LEFT", { detail: void 0 });
+        const board_state_after = get_board_state();
+        const current_score_after = get_current_score();
+        const best_score_after = get_best_score();
+
+        QUnit.test(
+          "Swiping to the left does swipe the board to the left",
+          function (assert) {
+            board_state_after.every((row, i) => {
+              // Given that collapse_to_the_left was previously tested, it can be used here as oracle
+              assert.ok(
+                are_array_deep_equal(
+                  row,
+                  collapse_to_the_left(board_state_before[i])
+                ),
+                "The board is swiped to the left"
+              );
+            });
+          }
+        );
+
+        QUnit.test(
+          "Swiping to the left does update the score when it should, and does not when it should not",
           function (assert) {
             const score_points = board_state_before.reduce(
               (acc, row) => acc + compute_score_after_collapse(row),
