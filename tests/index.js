@@ -1027,3 +1027,61 @@ QUnit.module("Collapse a row to the bottom", function (hooks) {
       });
   });
 });
+
+QUnit.module("Collapse a row to the top", function (hooks) {
+  const sample_size = 10;
+
+  QUnit.module("(UI) Swipe updates the board", function (hooks) {
+    const sample_size = 100;
+
+    Array(sample_size)
+      .fill(0)
+      .forEach((_) => {
+        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("START_NEW_GAME", { detail: void 0 });
+        const board_state_before = get_board_state();
+        const transposed_board_state_before = transpose(board_state_before);
+        const best_score_before = get_best_score();
+        const current_score_before = get_current_score();
+
+        events.emitter("COLLAPSE_TO_THE_TOP", { detail: void 0 });
+        const board_state_after = get_board_state();
+        const transposed_board_state_after = transpose(board_state_after);
+        const current_score_after = get_current_score();
+        const best_score_after = get_best_score();
+
+        QUnit.test(
+          "Swiping to the top  does swipe the board to the top",
+          function (assert) {
+            debugger
+            // The property can also be written as: transpose(swipe_bottom(board)) = swipe_left(transpose(board)))
+            transposed_board_state_after.every((row, i) => {
+              // Given that collapse_to_the_left was previously tested, it can be used here as oracle
+              assert.ok(
+                are_array_deep_equal(
+                  row,
+                  collapse_to_the_left(transposed_board_state_before[i])
+                ),
+                "The board is swiped to the top"
+              );
+            });
+          }
+        );
+
+        QUnit.test(
+          "Swiping to the right does update the score when it should, and does not when it should not",
+          function (assert) {
+            const score_points = board_state_before.reduce(
+              (acc, row) => acc + compute_score_after_collapse(row),
+              0
+            );
+            assert.deepEqual(
+              current_score_after,
+              current_score_before + score_points,
+              "The score is updated correctly"
+            );
+          }
+        );
+      });
+  });
+});

@@ -19,7 +19,7 @@ Let's see how far we can go.
 - Rules of the original 2048 game: https://www.baeldung.com/cs/2048-algorithm
 - Given:
   - a game just started
-- When the users swipes down
+- When the users swipes up
 - Then: 
   - the game board is updated as per the rules of the game
   - the current score is updated as per the rules of the game
@@ -31,10 +31,9 @@ Let's see how far we can go.
 
 # Approach
 - Implementation
-  - We do require the application to export a function that collapses rows (or columns) of cells. Here we focus on `collapse_to_the_bottom` which takes a row from the board, and returns the updated row that should replace the old one. Once again, we are going to test that function first.
 
 - Design:
-  - We reuse `collapse_to_the_right` (See [Implementation](#implementation))
+  - We reuse `collapse_to_the_left` (See [Implementation](#implementation))
   - The already implemented `compute_score_after_collapse` ([a,b,c,d]) -> points to add to the current score can be reused as is, as the score increases as a result of collapsing cells, not as a result of the direction in which they collapse.
 
 - Game rules for collapsing
@@ -44,37 +43,12 @@ Let's see how far we can go.
 
 # Implementation
 ## collapse_to_the_bottom
-- Swiping from top to down in the 4x4 array is the same as swiping right in the transposed array and trasnposing that
-- e.g.
-```
-a,b,a,d                      0,0,0,0
-c,c,0,d    =swipes down>     a,b,0,0
-c,0,a,0                      c,c,2a,2d
-c,b,b,a                      2c,b,b,a
-
-                                |
-                                t
-                                r
-same as                         a
-                                n
-                                s
-                                p
-                                o
-                                s
-                                e   
-                                |
-                                ∨
-
-a,c,c,c                      0,a,c,2c
-b,c,0,b    =swipes right>    0,b,c,b
-a,0,a,b                      0,0,2a,b
-d,d,0,a                      0,0,2d,a
-```
+- Swiping from top to down in the 4x4 array is the same as swiping left in the transposed array and transposing that
 
 ## Rendering
 No specific issue here:
-- set swipe down key event handler
-- when swipe down, extract the four rows of the board, transpose the matrix, compute the swiped rows, retranspose, and put that back in the board. If we extract the board state right then, the new four rows we recover should be our computed four rows exactly.
+- set swipe up key event handler
+- when swipe up, extract the four rows of the board, transpose the matrix, compute the left-swiped rows, retranspose, and put that back in the board. If we extract the board state right then, the new four rows we recover should be our computed four rows exactly.
 
 # Tests
 

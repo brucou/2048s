@@ -301,6 +301,9 @@ export function render(app_state, event_payload) {
       if (event.key === "n") {
         emitter("COLLAPSE_TO_THE_BOTTOM", void 0);
       }
+      if (event.key === "u") {
+        emitter("COLLAPSE_TO_THE_TOP", void 0);
+      }
     });
 
     // Swipe right mouse down + right drag
@@ -350,7 +353,7 @@ export function render(app_state, event_payload) {
           end_x = event.clientX;
           end_y = event.clientY;
 
-          // Check if the swipe was to the right
+          // Check if the swipe was downward
           if (
             end_x < start_x &&
             Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
@@ -379,7 +382,7 @@ export function render(app_state, event_payload) {
           end_x = event.clientX;
           end_y = event.clientY;
 
-          // Check if the swipe was to the right
+          // Check if the swipe was downward
           if (
             end_y > start_y &&
             Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
@@ -389,6 +392,35 @@ export function render(app_state, event_payload) {
         }
       });
     }
+
+        // Swipe left mouse down + up drag
+        {
+          let is_swiping = false; // Flag to check if the user is swiping
+          let start_x = 0; // Initial x position of the swipe
+          let start_y = 0; // Initial y position of the swipe
+          let end_x = 0; // Final x position of the swipe
+          let end_y = 0; // Final y position of the swipe
+          document.addEventListener("mousedown", (event) => {
+            is_swiping = true;
+            start_x = event.clientX;
+            start_y = event.clientY;
+          });
+          document.addEventListener("mouseup", (event) => {
+            if (is_swiping) {
+              is_swiping = false;
+              end_x = event.clientX;
+              end_y = event.clientY;
+    
+              // Check if the swipe was to the top
+              if (
+                end_y < start_y &&
+                Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
+              ) {
+                emitter("COLLAPSE_TO_THE_TOP", void 0);
+              }
+            }
+          });
+        }
 
     // Memoize elements
     elements = get_ui_elements();
@@ -543,6 +575,32 @@ export const events = {
       const transposed_board_state = transpose(board_state);
       const swiped_transposed_collapsed_board_state =
         transposed_board_state.map(collapse_to_the_right);
+      const new_board_state = swiped_transposed_collapsed_board_state.map(
+        (row, i) =>
+          row.map((_, j) => swiped_transposed_collapsed_board_state[j][i])
+      );
+      const score_points = board_state.reduce(
+        (acc, row) => acc + compute_score_after_collapse(row),
+        0
+      );
+      const new_score = lenses.get_current_score(app_state) + score_points;
+      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
+
+      const updated_state = lenses.set_board_state(
+        new_board_state,
+        lenses.set_current_score(
+          new_score,
+          lenses.set_best_score(best_score, app_state)
+        )
+      );
+
+      return [updated_state, ["RENDER"]];
+    },
+    COLLAPSE_TO_THE_TOP: (_, app_state) => {
+      const board_state = lenses.get_board_state(app_state);
+      const transposed_board_state = transpose(board_state);
+      const swiped_transposed_collapsed_board_state =
+        transposed_board_state.map(collapse_to_the_left);
       const new_board_state = swiped_transposed_collapsed_board_state.map(
         (row, i) =>
           row.map((_, j) => swiped_transposed_collapsed_board_state[j][i])
