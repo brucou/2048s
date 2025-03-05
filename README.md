@@ -37,7 +37,7 @@ CHANGED TO:
 
   - Note that we focus on requirement linked to the user. We try to avoid testing implementation details. Implementation details change with the implementation, while the requirements stay identical. We strive to only have to rewrite tests as a result of change in requirements.
     - the function that returns the game status could be considered an implementation detail
-    - the function `collapse_to_the_right` could be considered an implementation detail
+    - the function `collapse_to_the_right` could be considered an implementation detail. It implements a game rule, which is a requirement, but the fact that it is a pure function (vs. for instance a class method), its name, signature etc. are implementation details.
     - Pros
       - the aforementioned. More value for a given engineering effort
     - Cons
@@ -55,6 +55,7 @@ CHANGED TO:
 - Design:
   - `collapse_to_the_right` ([a,b,c,d]) -> [r,s,t,u] where a letter stands for either 0 or an integer power of 2
   - [r,s,t,u] should be the result of collapsing the row according to the game rules, as [taken from wikipedia](https://en.wikipedia.org/wiki/2048_(video_game)).
+  - Similarly, `compute_score_after_collapse` ([a,b,c,d]) -> points to add to the current score.
 
 - Game rules for collapsing
 > Tiles slide as far as possible in the chosen direction until they are stopped by either another tile or the edge of the grid. If two tiles of the same number collide while moving, they will merge into a tile with the total value of the two tiles that collided.[7][8] The resulting tile cannot merge with another tile again in the same move. Higher-scoring tiles emit a soft glow;[5] the largest possible tile is 131,072.[9]
@@ -96,6 +97,9 @@ Quick properties of this algorithm:
 - 3a. ensures that [2,2,2,2] behaves correctly: the first couple of 2 merge, but they can't later merge with the other couple of 2s
 - 2 and 3 ensure that 0 disappear from the right side (unless all zeros)
 - 2 and 3 ensure that all 0s appear the left side
+
+## compute_score_after_collapse
+That function was [written entirely with AI](./AI/ai%20prompt%20and%20answer%20-%20compute%20score%20after%20swipe) after only one correction. The AI-suggested function correctly reused the control flow and algorithm of `collapse_to_the_right`.
 
 ## Rendering
 No specific issue here:
@@ -223,8 +227,8 @@ ADR:
   - Pros:
     - we don't increase the testing of implementation details (how rendering is made is an implementation detail that should not be subject or coupled to test)
     - Implementation details may have to change in the future as a result of change in requirements, invalidating our tests.
-    - Simulating user events gives more confidence over the right behavior of the application
-    - 
+    - Simulating user events gives more confidence over the right behavior of the application.
+
   - Cons:
     - setting the state of the board directly is a convenient strategy. The entire state of this application can be locally stored (no remote database needed, no local storage needed) and instrumented without dependency injection (DOM is a global variable). 
 
@@ -242,7 +246,7 @@ ADR (updated):
 - We will impose lenses that take the application state and return the pieces of state of interest
 
 - Pros:
-  - the previous ADR is actually hard to implement and the benefits mentioned in there outweigh the benefits. Simulating a swipe right is not simple enough to be implemented reliably by this humble servant. There are not so many libraries, using them add a dependency to the project, possible bugs/quirks/limitations, and a permanent duty of maintenance (security, updates, bug fixing, etc.). 
+  - the previous ADR is actually hard to implement and the benefits mentioned in there outweigh the benefits. Simulating a swipe right is not simple enough to be implemented reliably by this humble servant, in addition to only imperfectly mirroring users' interactions. There are not so many libraries, using them adds a dependency to the project, possible bugs/quirks/limitations, and a permanent duty of maintenance (security, updates, bug fixing, etc.). 
   - We can instrument the entire application without having to simulate real user events. E.g., instead of simulating a swipe, we can run the behavior module with a swipe right event or even a swipe event paramterized by the swipe direction
   - Because we can get the updated state of the application as output, we can also test that the board was updated correctly if we know how toget the board state from the application state.
   - So we'll have to impose lenses over the application state to get the pieces of state that we are interested in. Those lenses have to be exposed by the implementation. Those implementation details thus become part of the technical specifications of the application. Lenses still allow to abstract over the implementation details related to the exact shape of the application state. E.g., if the board state is stored differently or in another property, we only change the lens, not every test that relies on a specific shape.
@@ -250,19 +254,19 @@ ADR (updated):
   - Oh but we will them require the application to expose a render function that we can use as is. Well if the only effect is rendering, then maybe we don't need an effect module. I'll see while doing.
 - Cons:
   - well as mentioned before, we are testing implementation details now. So if we change the name or the type of an event in the implementation, then our tests will fail. With a good IDE, this should be manageable however --- if only the implementation detail but not the requirement themselves.
-  - we don't actually need to store state in the application memory, all the state we need could be kept in the DOM. So in some ways, we are wasting memory. We don't think that is a big issue. But that has to be assessed as part of the acceptance testing (cf. non-functional requirements).
+  - we don't actually need to store state in the application memory, all the state we need could be kept in the DOM. So in some ways, we are wasting memory. We don't think that is a big issue. How memory usage affects usability has to be assessed as part of the acceptance testing (cf. non-functional requirements).
   - We still have to test that actual user events are indeed sending the expected events with the expected parameters to the behavior module! We'll do that manually and think about something better later.
 
 Half-way through the implementation another update :-)
 
 ADR:
 - user actions trigger changes in the application state and effect execution. We could impose a functional design revolving around a function that takes a user event and return only **data** instead of actually running effects, and updating the application state.
-- That design however means that we now then have to test also that a given application state matches the corresponding UI state. To do that, we don't need lenses on the application state, and lenses on the UI state. E.g., we need a function that takes the whole application state and returns just the board state, and another function that takes the browser's UI and returns the displayed board state. As mentioned, those lenses protect us from low-level implementation details.
+- That design however means that we now then have to test also that a given application state matches the corresponding UI state. To do that, we need lenses on the application state, and lenses on the UI state. E.g., we need a function that takes the whole application state and returns just the board state, and another function that takes the browser's UI and returns the displayed board state. As mentioned, those lenses protect us from low-level implementation details.
 - it is a coin toss but I think that for this specific application it is better to directly query the UI state and skip checking the application state update
 - Pros:
   - it is faster (less tests). 
   - tests are depending on UI specifications (e.g., selector name for the create game button etc.) but not on application state design or specification. Which is the best situation for us.
-  - we are running tests in a real browser and the application is simple enough that it is not costly to restart the application. The decoupling between application state and UI state does brings good benefits when testing application is fast, and testing UI state is slow. For instance, if you follow a test strategy that requires spawning a new browser instance for every test... 
+  - we are running tests in a real browser and the application is simple enough that it is not costly to restart the application. The decoupling between application state and UI state does bring good benefits when testing the application is fast, and testing UI state is slow. For instance, if you follow a test strategy that requires spawning a new browser instance for every test... 
   - In short we have not too much cost, and good benefits
 - Cons:
   - Application may grow, specifications may increase in volume, and it may make sense at some point to have a separate person/tool testing the relationship between application state and UI state. The productivity of that person is higher in a design that isolate and reify that relationship.

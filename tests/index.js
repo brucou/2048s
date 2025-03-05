@@ -238,7 +238,7 @@ QUnit.module("Random number generation", function (hooks) {
 });
 
 QUnit.module("Collapse a row to the right", function (hooks) {
-  const sample_size = 2;
+  const sample_size = 10;
   const oracle_tests = `
 
     # all letters non-zero and different
