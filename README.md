@@ -53,6 +53,7 @@ cf. ![example of swiping down before and after](./screenshots/swiping%20game%20r
 ## collapse_to_the_left
 The following relation holds:
 - collapse_to_the_left ([a,b,c,d]) = reverse (collapse_to_the_right(reverse([a,b,c,d])))
+- where reverse([a,b,c,d]) = [d,c,b,a]
 
 ## Rendering
 No specific issue here:
@@ -146,11 +147,12 @@ Here are the cases with their corresponding results (different letters mean diff
 We could do some PBT based on other properties that are not used for the implementation. But we'll save ourselves the trouble as we are happy already about the confidence generated so far by previous tests for `collapse_to_the_right`.
 
 ## UI testing
-
+Largely same as those for collapse_to_the_right
 
 # Screenshots
 
 # Room for improvement
+- refactor collapse_to_the_[right/left] into a single function with a direction parameter?
 
 # Lessons learnt
 ## CSS
@@ -160,3 +162,4 @@ We could do some PBT based on other properties that are not used for the impleme
 ## AI
 
 ## Testing
+- be careful with copy pasting. I made a mistake in a few of the oracle tests. E.g., [a,a,a,0] -> [a,2a,0,0] instead of [2a,a,0,0]
