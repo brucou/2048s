@@ -24,8 +24,9 @@ CHANGED TO:
   - a game in progress
 - When the users swipes right
 - Then: 
-  - the game board is updated as per the rules of the game.
-  - the score is updated as per the rules of the game.
+  - the game board is updated as per the rules of the game
+  - the current score is updated as per the rules of the game
+  - the best score is updated as per the rules of the game
   
   ## ADR:
   - Note that we don't include here more statement on the change in game status. The swipe right may lead to the user winning or loosing but the relevant requirement will be addressed later. This is of course arbitrary. The decision criteria is to keep the requirement small enough that ONE person can get it done in an arbitrary short amount of time.
