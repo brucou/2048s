@@ -1,4 +1,3 @@
-
 /**
  * Random generator
  * Returns a function which generates a number between 0 and 1.
@@ -47,11 +46,43 @@ export function get_seeded_random_generator(seed) {
   return SimpleFastCounter32(generated_seed, MurmurHash3("some seed")());
 }
 
-export function transpose (array_of_arrays) {
+export function transpose(array_of_arrays) {
   return array_of_arrays.map((row, i) =>
     row.map((_, j) => array_of_arrays[j][i])
   );
-} 
+}
+
+/**
+ *
+ * @param {Array<Array<Number>>} board1
+ * @param {Array<Array<Number>>} board2
+ * @returns true if the boards are deep equal, false otherwise
+ */
+export function are_boards_deep_equal(board1, board2) {
+  return JSON.stringify(board1) === JSON.stringify(board2);
+}
+
+export function compose_lenses_setters(arr_lenses) {
+  return (state) =>
+    arr_lenses.reduce((acc, [lens_setter, value]) => {
+      return lens_setter(value, acc);
+    }, state);
+}
+
+export function get_random_cell_value(random_generator, threshold) {
+  return random_generator() < threshold ? 2 : 4;
+}
+
+export function get_empty_cells(board_state) {
+  return board_state.reduce((acc, row, i) => {
+    row.forEach((cell, j) => {
+      if (cell === 0) {
+        acc.push([i, j]);
+      }
+    });
+    return acc;
+  }, []);
+}
 
 /**
  * Generates two numbers and positions for the two starting cells for the 2048 game.
@@ -69,27 +100,21 @@ export function get_starting_cells(seeded_random_generator) {
   let second_cell_x, second_cell_y, second_cell_value;
 
   do {
-    let [
-      rand_first_cell_value,
-      rand_second_cell_value,
-      position_first_cell,
-      position_second_cell,
-    ] = [
-      seeded_random_generator(),
-      seeded_random_generator(),
+    let [position_first_cell, position_second_cell] = [
       seeded_random_generator(),
       seeded_random_generator(),
     ];
 
-    first_cell_value = rand_first_cell_value < 0.9 ? 2 : 4;
-    second_cell_value = rand_second_cell_value < 0.9 ? 2 : 4;
+    get_random_cell_value(seeded_random_generator, 0.9),
+      (first_cell_x = Math.trunc((UPPER_BOUND * position_first_cell) % 4));
+    first_cell_y = Math.trunc(((UPPER_BOUND * position_first_cell) % 16) / 4);
 
-    first_cell_x = Math.trunc((100 * position_first_cell) % 4);
-    first_cell_y = Math.trunc(((100 * position_first_cell) % 16) / 4);
-
-    second_cell_x = Math.trunc((100 * position_second_cell) % 4);
-    second_cell_y = Math.trunc(((100 * position_second_cell) % 16) / 4);
+    second_cell_x = Math.trunc((UPPER_BOUND * position_second_cell) % 4);
+    second_cell_y = Math.trunc(((UPPER_BOUND * position_second_cell) % 16) / 4);
   } while (first_cell_x === second_cell_x && first_cell_y === second_cell_y);
+
+  first_cell_value = get_random_cell_value(seeded_random_generator, 0.9);
+  second_cell_value = get_random_cell_value(seeded_random_generator, 0.9);
 
   return [
     [first_cell_x, first_cell_y, first_cell_value],
@@ -224,14 +249,14 @@ export function start_new_game(deps) {
   board_state[first_cell_x][first_cell_y] = first_cell_value;
   board_state[second_cell_x][second_cell_y] = second_cell_value;
 
-  return [
-    {
-      board_state,
-      best_score: 0,
-      current_score: 0,
-    },
-    ["RENDER"],
-  ];
+  const new_app_state = compose_lenses_setters([
+    [lenses.set_board_state, board_state],
+    [lenses.set_best_score, 0],
+    [lenses.set_current_score, 0],
+    [lenses.set_game_status, IN_PROGRESS],
+  ])(INIT_APP_STATE);
+
+  return [new_app_state, ["RENDER"]];
 }
 
 /**
@@ -293,16 +318,16 @@ export function render(app_state, event_payload) {
     // Swipe keys
     document.addEventListener("keydown", (event) => {
       if (event.key === "k") {
-        emitter("COLLAPSE_TO_THE_RIGHT", void 0);
+        emitter("COLLAPSE", "RIGHT");
       }
       if (event.key === "h") {
-        emitter("COLLAPSE_TO_THE_LEFT", void 0);
+        emitter("COLLAPSE", "LEFT");
       }
       if (event.key === "n") {
-        emitter("COLLAPSE_TO_THE_BOTTOM", void 0);
+        emitter("COLLAPSE", "DOWN");
       }
       if (event.key === "u") {
-        emitter("COLLAPSE_TO_THE_TOP", void 0);
+        emitter("COLLAPSE", "TOP");
       }
     });
 
@@ -329,7 +354,7 @@ export function render(app_state, event_payload) {
             end_x > start_x &&
             Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
           ) {
-            emitter("COLLAPSE_TO_THE_RIGHT", void 0);
+            emitter("COLLAPSE", "RIGHT");
           }
         }
       });
@@ -358,7 +383,7 @@ export function render(app_state, event_payload) {
             end_x < start_x &&
             Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
           ) {
-            emitter("COLLAPSE_TO_THE_LEFT", void 0);
+            emitter("COLLAPSE", "LEFT");
           }
         }
       });
@@ -387,40 +412,40 @@ export function render(app_state, event_payload) {
             end_y > start_y &&
             Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
           ) {
-            emitter("COLLAPSE_TO_THE_BOTTOM", void 0);
+            emitter("COLLAPSE", "DOWN");
           }
         }
       });
     }
 
-        // Swipe left mouse down + up drag
-        {
-          let is_swiping = false; // Flag to check if the user is swiping
-          let start_x = 0; // Initial x position of the swipe
-          let start_y = 0; // Initial y position of the swipe
-          let end_x = 0; // Final x position of the swipe
-          let end_y = 0; // Final y position of the swipe
-          document.addEventListener("mousedown", (event) => {
-            is_swiping = true;
-            start_x = event.clientX;
-            start_y = event.clientY;
-          });
-          document.addEventListener("mouseup", (event) => {
-            if (is_swiping) {
-              is_swiping = false;
-              end_x = event.clientX;
-              end_y = event.clientY;
-    
-              // Check if the swipe was to the top
-              if (
-                end_y < start_y &&
-                Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
-              ) {
-                emitter("COLLAPSE_TO_THE_TOP", void 0);
-              }
-            }
-          });
+    // Swipe left mouse down + up drag
+    {
+      let is_swiping = false; // Flag to check if the user is swiping
+      let start_x = 0; // Initial x position of the swipe
+      let start_y = 0; // Initial y position of the swipe
+      let end_x = 0; // Final x position of the swipe
+      let end_y = 0; // Final y position of the swipe
+      document.addEventListener("mousedown", (event) => {
+        is_swiping = true;
+        start_x = event.clientX;
+        start_y = event.clientY;
+      });
+      document.addEventListener("mouseup", (event) => {
+        if (is_swiping) {
+          is_swiping = false;
+          end_x = event.clientX;
+          end_y = event.clientY;
+
+          // Check if the swipe was to the top
+          if (
+            end_y < start_y &&
+            Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
+          ) {
+            emitter("COLLAPSE", "TOP");
+          }
         }
+      });
+    }
 
     // Memoize elements
     elements = get_ui_elements();
@@ -446,7 +471,17 @@ export function render(app_state, event_payload) {
 
 // Init key dependencies
 const seed = "some seed string";
+const new_cell_seed = "another seed string";
 const random_generator = get_seeded_random_generator(seed);
+const random_cell_generator = get_seeded_random_generator(new_cell_seed);
+
+// Init constants
+const NOT_STARTED = -1;
+const IN_PROGRESS = 1;
+const GAME_OVER = 0;
+// With such a high upper bound for random numbers, we can get 30x30 boards
+// and still cover the entire board
+const UPPER_BOUND = 1000;
 
 const INIT_APP_STATE = {
   board_state: [
@@ -457,6 +492,7 @@ const INIT_APP_STATE = {
   ],
   best_score: 0,
   current_score: 0,
+  game_status: NOT_STARTED,
 };
 
 let app_state = INIT_APP_STATE;
@@ -471,6 +507,8 @@ export const lenses = {
     ...app_state,
     current_score,
   }),
+  get_game_status: (app_state) => app_state.game_status,
+  set_game_status: (game_status, app_state) => ({ ...app_state, game_status }),
 };
 
 // Setting a dummy variable for strict equality checking of non-existing subscriptions
@@ -509,9 +547,10 @@ export const behavior = {
       app_state = updated_state;
 
       // Execute the effects
-      effects.forEach((effect) =>
-        behavior.effects[effect](app_state, event.detail)
-      );
+      effects &&
+        effects.forEach((effect) =>
+          behavior.effects[effect](app_state, event.detail)
+        );
     } catch (e) {
       console.error(
         `Either the effect handlers for ${effects} failed, or one of such handlers is missing!`
@@ -530,97 +569,89 @@ export const events = {
   subscriptions: {
     INITIALIZE_APP: (_, __) => [INIT_APP_STATE, ["RENDER"]],
     START_NEW_GAME: (_, __) => start_new_game({ random_generator }),
-    COLLAPSE_TO_THE_RIGHT: (_, app_state) => {
+    COLLAPSE: (move_direction, app_state) => {
+      const moves = {
+        RIGHT: [(board_state) => board_state.map(collapse_to_the_right)],
+        LEFT: [(board_state) => board_state.map(collapse_to_the_left)],
+        DOWN: [
+          (board_state) =>
+            transpose(board_state)
+              .map(collapse_to_the_right)
+              .map((row, i, arr) => row.map((_, j) => arr[j][i])),
+        ],
+        TOP: [
+          (board_state) =>
+            transpose(board_state)
+              .map(collapse_to_the_left)
+              .map((row, i, arr) => row.map((_, j) => arr[j][i])),
+        ],
+      };
+      const [update_board] = moves[move_direction];
+
+      // If the game is in progress
+      const game_status = lenses.get_game_status(app_state);
+      if (game_status !== IN_PROGRESS) return [app_state, void 0];
+
+      // then swipe the board right and compute the new scores
       const board_state = lenses.get_board_state(app_state);
-      const new_board_state = board_state.map(collapse_to_the_right);
+      const collapsed_board_state = update_board(board_state);
       const score_points = board_state.reduce(
         (acc, row) => acc + compute_score_after_collapse(row),
         0
       );
       const new_score = lenses.get_current_score(app_state) + score_points;
-      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
-
-      const updated_state = lenses.set_board_state(
-        new_board_state,
-        lenses.set_current_score(
-          new_score,
-          lenses.set_best_score(best_score, app_state)
-        )
+      const new_best_score = Math.max(
+        lenses.get_best_score(app_state),
+        new_score
       );
 
-      return [updated_state, ["RENDER"]];
-    },
-    COLLAPSE_TO_THE_LEFT: (_, app_state) => {
-      const board_state = lenses.get_board_state(app_state);
-      const new_board_state = board_state.map(collapse_to_the_left);
-      const score_points = board_state.reduce(
-        (acc, row) => acc + compute_score_after_collapse(row),
-        0
-      );
-      const new_score = lenses.get_current_score(app_state) + score_points;
-      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
+      // If the swipe move does not change the board in any way,
+      // don't do anything.
+      if (are_boards_deep_equal(board_state, collapsed_board_state)) {
+        return [app_state, void 0];
+      }
 
-      const updated_state = lenses.set_board_state(
-        new_board_state,
-        lenses.set_current_score(
-          new_score,
-          lenses.set_best_score(best_score, app_state)
-        )
-      );
+      // If it did change the board, then it means there was an empty cell
+      // that numbers slided into. Add a new number in one of those cells.
+      const empty_cells = get_empty_cells(collapsed_board_state);
+      const index =
+        Math.trunc(random_cell_generator() * UPPER_BOUND) % empty_cells.length;
+      const new_cell_coordinate = empty_cells[index];
 
-      return [updated_state, ["RENDER"]];
-    },
-    COLLAPSE_TO_THE_BOTTOM: (_, app_state) => {
-      const board_state = lenses.get_board_state(app_state);
-      const transposed_board_state = transpose(board_state);
-      const swiped_transposed_collapsed_board_state =
-        transposed_board_state.map(collapse_to_the_right);
-      const new_board_state = swiped_transposed_collapsed_board_state.map(
-        (row, i) =>
-          row.map((_, j) => swiped_transposed_collapsed_board_state[j][i])
-      );
-      const score_points = board_state.reduce(
-        (acc, row) => acc + compute_score_after_collapse(row),
-        0
-      );
-      const new_score = lenses.get_current_score(app_state) + score_points;
-      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
+      const board_state_with_new_cell = collapsed_board_state.map((row, i) => {
+        return row.map((cell, j) => {
+          if (i === new_cell_coordinate[0] && j === new_cell_coordinate[1]) {
+            return get_random_cell_value(random_cell_generator, 0.9);
+          }
+          return cell;
+        });
+      });
 
-      const updated_state = lenses.set_board_state(
-        new_board_state,
-        lenses.set_current_score(
-          new_score,
-          lenses.set_best_score(best_score, app_state)
-        )
+      // Is there any move possible that frees a cell for a new number?
+      const is_move_possible = ["TOP", "DOWN", "RIGHT", "LEFT"].some(
+        (move_direction) =>
+          get_empty_cells(moves[move_direction][0](board_state_with_new_cell))
+            .length !== 0
       );
+      if (is_move_possible) {
+        const new_app_state = compose_lenses_setters([
+          [lenses.set_board_state, board_state_with_new_cell],
+          [lenses.set_game_status, IN_PROGRESS],
+          [lenses.set_current_score, new_score],
+          [lenses.set_best_score, new_best_score],
+        ])(app_state);
 
-      return [updated_state, ["RENDER"]];
-    },
-    COLLAPSE_TO_THE_TOP: (_, app_state) => {
-      const board_state = lenses.get_board_state(app_state);
-      const transposed_board_state = transpose(board_state);
-      const swiped_transposed_collapsed_board_state =
-        transposed_board_state.map(collapse_to_the_left);
-      const new_board_state = swiped_transposed_collapsed_board_state.map(
-        (row, i) =>
-          row.map((_, j) => swiped_transposed_collapsed_board_state[j][i])
-      );
-      const score_points = board_state.reduce(
-        (acc, row) => acc + compute_score_after_collapse(row),
-        0
-      );
-      const new_score = lenses.get_current_score(app_state) + score_points;
-      const best_score = Math.max(lenses.get_best_score(app_state), new_score);
+        return [new_app_state, ["RENDER"]];
+      } else {
+        const new_app_state = compose_lenses_setters([
+          [lenses.set_board_state, board_state_with_new_cell],
+          [lenses.set_game_status, GAME_OVER],
+          [lenses.set_current_score, new_score],
+          [lenses.set_best_score, new_best_score],
+        ])(app_state);
 
-      const updated_state = lenses.set_board_state(
-        new_board_state,
-        lenses.set_current_score(
-          new_score,
-          lenses.set_best_score(best_score, app_state)
-        )
-      );
-
-      return [updated_state, ["RENDER"]];
+        return [new_app_state, ["RENDER"]];
+      }
     },
   },
 };
