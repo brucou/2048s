@@ -22,13 +22,16 @@ Let's see how far we can go.
 - When the users swipes up/down/left/right
 - Then: 
   - the game board is updated as per the rules of the game
-  - if there are empty cells, one of those, randomly chosen, is filled with a number that is either 2 or 4
-  - after that number is added:
-    - if there are no more moves (e.g., swipes up/down/left/right) that frees a cell in the board, the game is over
-    - otherwise the game remains in progress
+  - if the user move leads to a change in the board:
+    - the score is updated
+    - the best score is updated if the score is higher than the best score
+    - a new number, 2 (90% of the time) or 4, is added to the board, picked randomly from the empty cells
+      - if there are no more moves (e.g., swipes up/down/left/right) that frees a cell in the board, the game is over
+      - otherwise the game remains in progress
+
+See [the game's state machine](./tests/Game%20state%20machine.png).
 
   ## ADR:
-  - 
 
 # Approach
 - Implementation
@@ -52,7 +55,7 @@ Let's see how far we can go.
   - We generate N random game plays. For each, we choose a M random number of moves, then a random move for each turn, then apply that.
   - After each random move, we check that the game requirement holds
 
-But we have no way to know that the game is over! So we add a requirement which is to add a board overlay that says game over. We can check the existence of the overlay in our tests. So even if the game is over, we can still send swipe events and check each time that the overlay remains put.
+But we have no way to know that the game is recognized as over purely from reading the UI! So we add a requirement which is to add a board overlay that says game over. We can check the existence of the overlay in our tests. So even if the game is over, we can still send swipe events and check each time that the overlay remains put.
 
 We should try to find some property or oracle testing so we can test all conditions of the requirements on games of arbitrary length.
 Generate random game:
@@ -71,7 +74,8 @@ Generate random game:
   - when no moves are moving the board observed once, it always remain like this.
 
 
-In other words, the test is a state machine.
+In other words, the test is a state machine:
+- [the game test's state machine](./tests/derived%20test%20state%20machine.png) that we derived from the game's state machine
 
 # Implementation
 Nothing special to mention.
@@ -83,7 +87,35 @@ A lot of our UI tests are now failing. Moving the board in one direction now add
 
 
 ## UI testing
-That's all we'll do here. Thanks to our previous tests, we have functions that we trust compute the board's expected state as a result of a user move (left/right/up/down). We have functions that read the board state from the DOM. We only to generate user moves and compare actual vs. expected repeatedly. Tests will be considered passed if the sequence of moves does not generate a contradiction to the rules of the game. Test will be considered failed when such a contradiction is met. 
+That's all we'll do here. Thanks to our previous tests, we have functions that we trust compute the score and the board's expected state as a result of a user move (left/right/up/down). We also have functions that read the board state from the DOM (including wwhether the game is over). We only have to generate test games and then run our tests on it.
+
+What is the test space for a game with n moves?
+- events (5):
+  - new game
+  - swipe left
+  - swipe right
+  - swipe up
+  - swipe down
+- number of moves: n, unbounded
+- so essentially 5^n games
+
+That grows very quickly, and not all tests generate the same amount of confidence. For instance, 1,200 different sequences of moves, none of which ever includes the new game button click generate as much confidence as a single one of those move. There are [several coverage strategies](https://arxiv.org/pdf/2203.09604) that can be applied when testing state machines, e.g.,:
+- all-events coverage
+- node coverage (also known as All States Coverage), in which we ensure that the test set leads to the state machine passing through all possible states
+- edge coverage (also known as All Transitions coverage), in which we ensure that the test set leads to the state machine passing through all possible transitions at least once
+- all-actions coverage
+
+In an infinite test space, picking test cases that reveal bugs or provide confidence that most common cases and edge cases of interest will have been correctly tested is non-trivial. Here:
+- we are going to use a combination of randomly generating plays with a random number of moves by randomly picking an event from the list of events.
+- we are going to generate plays that guarantees some paths are taken and events (moves) are sent,e.g.,:
+  - start, then move left, then right, then up, then down, and repeat
+  - start, then move left then right till the board does not update, then move up, then down, till the board does not update, and repeat - till we have tried all move directions
+  - etc.
+
+
+
+Several strategies:
+- fully random generation of games
 
 // TODO: talk about the test space = [events] x n
 // and testing output of each event is according to game rules

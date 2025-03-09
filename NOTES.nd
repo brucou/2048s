@@ -1,0 +1,9 @@
+# Prior art
+- [https://github.com/rilka/threesjs](Threes)
+- [2048 with a lot of parameters that can be customized](https://cyberzhg.github.io/2048/) (board size, AI, play strategy -swing, swirl, corner, random, etc.)
+  - [source code](https://github.com/CyberZHG/2048)
+- [Hard version](https://sztupy.hu/2048-Hard/): new cell always in the worst place
+- Research
+  - [Computational bounds for the 2048 game](https://arxiv.org/pdf/2303.07266)
+  - [Threes!, Fives, 1024!, and 2048 are Hard](https://arxiv.org/pdf/1505.04274)
+  - [ON THE COMPLEXITY OF SLIDE-AND-MERGE GAMES](https://arxiv.org/pdf/1501.03837v1)
