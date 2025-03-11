@@ -470,7 +470,7 @@ export function render(app_state, event_payload) {
 }
 
 // Init key dependencies
-const seed = "some seed string";
+const first_cells_seed = "some seed string";
 const new_cell_seed = "another seed string";
 const random_generator = get_seeded_random_generator(seed);
 const random_cell_generator = get_seeded_random_generator(new_cell_seed);
@@ -685,4 +685,4 @@ Object.keys(events.subscriptions).forEach((event_type) => {
 });
 
 // Initialize the app
-events.emitter("INITIALIZE_APP", { detail: void 0 });
+events.emitter("INITIALIZE_APP", { first_cells_seed , new_cell_seed });
