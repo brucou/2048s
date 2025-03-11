@@ -1042,3 +1042,10 @@ QUnit.module("Collapse a row to the top", function (hooks) {
       });
   });
 });
+
+QUnit.module("(UI) Game rules", function (hooks) {
+  QUnit.module("Game state machine describes accurately the game", function (hooks) {
+    
+    events.emitter("INITIALIZE_APP", { detail: void 0 });
+  });
+});

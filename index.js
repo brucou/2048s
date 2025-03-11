@@ -298,7 +298,7 @@ export let elements;
 
 export function render(app_state, event_payload) {
   const { emitter } = events;
-  const {init} = event_payload||{};
+  const { init } = event_payload || {};
 
   if (init) {
     // That's the first render of tha app
@@ -499,7 +499,7 @@ let app_state = INIT_APP_STATE;
 
 export const lenses = {
   set_generators: ({ random_generator, random_cell_generator }, app_state) => ({ ...app_state, random_generator, random_cell_generator }),
-  get_generators: (app_state) => ({random_generator: app_state.random_generator, random_cell_generator: app_state.random_cell_generator}),
+  get_generators: (app_state) => ({ random_generator: app_state.random_generator, random_cell_generator: app_state.random_cell_generator }),
   get_board_state: (app_state) => app_state.board_state,
   set_board_state: (board_state, app_state) => ({ ...app_state, board_state }),
   get_best_score: (app_state) => app_state.best_score,
@@ -525,8 +525,10 @@ export const noop = () => empty_array;
  * thus updates the application state and executes the effects.
  */
 export const behavior = {
+  /** @typedef Object<String, (app_state, event_payload) => void */
   effects: {
     RENDER: render,
+    FIRST_RENDER: (x, y) => render(x, { ...y, init: true }),
   },
   global_listener: (event) => {
     // DOC: this means that subscriptions are not allowed to return undefined as updated state
@@ -578,7 +580,7 @@ export const events = {
         [lenses.set_generators, { random_generator, random_cell_generator }],
       ])(INIT_APP_STATE);
 
-      return [new_app_state, ["RENDER"]]
+      return [new_app_state, ["FIRST_RENDER"]]
     },
     // TODO: update tests
     START_NEW_GAME: (_, app_state) => start_new_game(app_state),
@@ -685,4 +687,4 @@ Object.keys(events.subscriptions).forEach((event_type) => {
 });
 
 // Initialize the app
-events.emitter("INITIALIZE_APP", { first_cells_seed , new_cell_seed, init: true });
+events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });
