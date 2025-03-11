@@ -85,7 +85,7 @@ Nothing special to mention.
 # Tests
 A lot of our UI tests are now failing. Moving the board in one direction now adds a number so deep equal comparison are going to fail. We thus need a comparison that is true with the predicted board except exactly one cell! Hence now, we are going to be comparing boards directly, not just rows. We changed the requirements by refining it further, so we have to refine the tests too. Lesson learnt: put the full requirement from the beginning. That is, specify all what should happen in response to a user event. Or accept the downside when there is enough benefit in implementing a smaller portion of the requirement first.
 
-We'll update the failing tests to account for the extra number being added.
+We'll remove the failing tests. They are now redundant, now that we will test the entire game, not just the first play. While those tests reached the end of their life, they were still useful to give us confidence for the intermediate implementation steps we took. Still on the fence whether in total, the benefit is positive or not.
 
 ## UI testing
 That's all we'll do here. Thanks to our previous tests, we have functions that we trust compute the score and the board's expected state as a result of a user move (left/right/up/down). We also have functions that read the board state from the DOM (including wwhether the game is over). We only have to generate test games and then run our tests on it.
@@ -138,4 +138,10 @@ The full algoritm can be conveniently described as a state machine. Please see:
 
 ## Testing
 - State machines are great as specifications tools. They can be used to accurately but concisely describe the game play but also to test the game itself.
-- A state diagram is far easier to test for bugs than code and generates more confidence about our implementation.
+- A state diagram is far easier to test for bugs than code and generates more confidence about our implementation
+- We made a mistake in our previous test when computing the score, resulting in tests passing (same mistake made both implementation and test so cancelling themselves out...) when they should not:
+  - this: `const score_points = board_state.reduce((acc, row) => acc + compute_score_after_collapse(row), 0);` only applies to the right and left move. For the up and down move, we need to transpose the board before apply the compute score function!
+  - Good. What do we learn from that?
+  - First, we eventually found out the error now that we are going to write the tests for the entire game. Nice, but kind of late still.
+  - Second, we should have relied on both the oracle and the property. Here, the problem is that we used a property and our property was wrong (for up and down). We would have caught that with the oracle. Reciprocally, if our oracle tests would be wrong somewhere, we are likely to catch those bugs with the property.
+  - The end lesson is to use both oracle and PBT to check each other. I guess another lesson is, like when copy pasting, pay more attention. 
