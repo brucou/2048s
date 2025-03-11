@@ -586,6 +586,17 @@ export const events = {
               .map((row, i, arr) => row.map((_, j) => arr[j][i])),
         ],
       };
+      let scores = {
+        RIGHT: (board_state) =>
+          board_state.reduce(
+            (acc, row) => acc + compute_score_after_collapse(row),
+            0
+          ),
+        DOWN: (board_state) => scores.RIGHT(transpose(board_state)),
+      };
+      scores["LEFT"] = scores.RIGHT;
+      scores["TOP"] = scores.DOWN;
+
       const [update_board] = moves[move_direction];
 
       // If the game is in progress
@@ -595,10 +606,8 @@ export const events = {
       // then swipe the board right and compute the new scores
       const board_state = lenses.get_board_state(app_state);
       const collapsed_board_state = update_board(board_state);
-      const score_points = board_state.reduce(
-        (acc, row) => acc + compute_score_after_collapse(row),
-        0
-      );
+      const score_points = scores[move_direction](board_state);
+
       const new_score = lenses.get_current_score(app_state) + score_points;
       const new_best_score = Math.max(
         lenses.get_best_score(app_state),

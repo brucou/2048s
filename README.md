@@ -85,6 +85,7 @@ Nothing special to mention.
 # Tests
 A lot of our UI tests are now failing. Moving the board in one direction now adds a number so deep equal comparison are going to fail. We thus need a comparison that is true with the predicted board except exactly one cell! Hence now, we are going to be comparing boards directly, not just rows. We changed the requirements by refining it further, so we have to refine the tests too. Lesson learnt: put the full requirement from the beginning. That is, specify all what should happen in response to a user event. Or accept the downside when there is enough benefit in implementing a smaller portion of the requirement first.
 
+We'll update the failing tests to account for the extra number being added.
 
 ## UI testing
 That's all we'll do here. Thanks to our previous tests, we have functions that we trust compute the score and the board's expected state as a result of a user move (left/right/up/down). We also have functions that read the board state from the DOM (including wwhether the game is over). We only have to generate test games and then run our tests on it.
@@ -105,23 +106,20 @@ That grows very quickly, and not all tests generate the same amount of confidenc
 - edge coverage (also known as All Transitions coverage), in which we ensure that the test set leads to the state machine passing through all possible transitions at least once
 - all-actions coverage
 
-In an infinite test space, picking test cases that reveal bugs or provide confidence that most common cases and edge cases of interest will have been correctly tested is non-trivial. Here:
-- we are going to use a combination of randomly generating plays with a random number of moves by randomly picking an event from the list of events.
-- we are going to generate plays that guarantees some paths are taken and events (moves) are sent,e.g.,:
-  - start, then move left, then right, then up, then down, and repeat
-  - start, then move left then right till the board does not update, then move up, then down, till the board does not update, and repeat - till we have tried all move directions
-  - etc.
+In an infinite test space, picking test cases that reveal bugs or provide confidence that most common cases and edge cases of interest will have been correctly tested is non-trivial. This is the choice we made:
+- combination of randomly generated plays with random length
+- Swing-and-switch play strategy
+  - start, then move right abd left till no progress, then up and down, till no progress, repeat if progress between right/left and up/down phase, otherwise only send EOF
+- Twirl-and-switch play strategy
+  - same as Swing-and-switch, but move in a square instead of in a line
 
+With a sufficient high length, those tests should achieve:
+- all-events coverage
+- all-state coverage
+- all-transitions coverage
 
+After all tests are concluded, we will provide a coverage report and reassess if the coverage is found to be unsatisfactory.
 
-Several strategies:
-- fully random generation of games
-
-// TODO: talk about the test space = [events] x n
-// and testing output of each event is according to game rules
-// so also that no events prior to create new game is changing the board/score/etc.!!
-// and also make it more clear that the test can be automaticaly derived from the game state machine
-// it is not so obvious now
 
 The full algoritm can be conveniently described as a state machine. Please see:
 - [the game's state machine](./tests/Game%20state%20machine.png)

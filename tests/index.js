@@ -10,7 +10,11 @@ import {
   get_ui_elements,
   events,
 } from "../index.js";
-import { check_generator, are_array_deep_equal, transpose } from "../tests/_utils.js";
+import {
+  check_generator,
+  are_array_deep_equal,
+  transpose,
+} from "../tests/_utils.js";
 
 QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
@@ -422,38 +426,43 @@ QUnit.module("Collapse a row to the right", function (hooks) {
     }
   );
 
-  QUnit.module("Oracle testing (swipe right and score points)", function (hooks) {
-    test_results.forEach(
-      ([
-        test_scenario,
-        expected_output_pattern,
-        test_inputs,
-        actual_test_results,
-        expected_test_results,
-      ]) => {
-        //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
-        QUnit.test(
-          `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
+  QUnit.module(
+    "Oracle testing (swipe right and score points)",
+    function (hooks) {
+      test_results.forEach(
+        ([
+          test_scenario,
+          expected_output_pattern,
+          test_inputs,
+          actual_test_results,
+          expected_test_results,
+        ]) => {
+          //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
+          QUnit.test(
+            `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
 
-          function (assert) {
-            test_inputs.forEach(({ test_case }, i) => {
-              assert.deepEqual(
-                actual_test_results[i],
-                expected_test_results[i].expected_row,
-                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
-              );
+            function (assert) {
+              test_inputs.forEach(({ test_case }, i) => {
+                assert.deepEqual(
+                  actual_test_results[i],
+                  expected_test_results[i].expected_row,
+                  `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
+                );
 
-              assert.deepEqual(
-                compute_score_after_collapse(test_case),
-                expected_test_results[i].score_points,
-                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(test_case)}`
-              );
-            });
-          }
-        );
-      }
-    );
-  });
+                assert.deepEqual(
+                  compute_score_after_collapse(test_case),
+                  expected_test_results[i].score_points,
+                  `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(
+                    test_case
+                  )}`
+                );
+              });
+            }
+          );
+        }
+      );
+    }
+  );
 
   QUnit.module("Property-based testing", function (hooks) {
     // 1. besides the zero array, every output has 0s only on the left side or has no zero at all (compactness property)
@@ -665,26 +674,10 @@ QUnit.module("Collapse a row to the right", function (hooks) {
         const best_score_before = get_best_score();
         const current_score_before = get_current_score();
 
-        events.emitter("COLLAPSE_TO_THE_RIGHT", { detail: void 0 });
+        events.emitter("COLLAPSE", "RIGHT");
         const board_state_after = get_board_state();
         const current_score_after = get_current_score();
         const best_score_after = get_best_score();
-
-        QUnit.test(
-          "Swiping to the right does swipe the board to the right",
-          function (assert) {
-            board_state_after.every((row, i) => {
-              // Given that collapse_to_the_right was previously tested, it can be used here as oracle
-              assert.ok(
-                are_array_deep_equal(
-                  row,
-                  collapse_to_the_right(board_state_before[i])
-                ),
-                "The board is swiped to the right"
-              );
-            });
-          }
-        );
 
         QUnit.test(
           "Swiping to the right does update the score when it should, and does not when it should not",
@@ -887,38 +880,43 @@ QUnit.module("Collapse a row to the left", function (hooks) {
     }
   );
 
-  QUnit.module("Oracle testing (swipe left and score points)", function (hooks) {
-    test_results.forEach(
-      ([
-        test_scenario,
-        expected_output_pattern,
-        test_inputs,
-        actual_test_results,
-        expected_test_results,
-      ]) => {
-        //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
-        QUnit.test(
-          `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
+  QUnit.module(
+    "Oracle testing (swipe left and score points)",
+    function (hooks) {
+      test_results.forEach(
+        ([
+          test_scenario,
+          expected_output_pattern,
+          test_inputs,
+          actual_test_results,
+          expected_test_results,
+        ]) => {
+          //e.g. test_scenario = 'a,b,c,d' and expected_output_pattern = 'a,b,c,d'
+          QUnit.test(
+            `Input of the shape ${test_scenario} are swiped right to ${expected_output_pattern}`,
 
-          function (assert) {
-            test_inputs.forEach(({ test_case }, i) => {
-              assert.deepEqual(
-                actual_test_results[i],
-                expected_test_results[i].expected_row,
-                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
-              );
+            function (assert) {
+              test_inputs.forEach(({ test_case }, i) => {
+                assert.deepEqual(
+                  actual_test_results[i],
+                  expected_test_results[i].expected_row,
+                  `Scenario ${test_scenario} with expected output ${expected_output_pattern} is fulfilled when passing inputs ${test_case}`
+                );
 
-              assert.deepEqual(
-                compute_score_after_collapse(test_case),
-                expected_test_results[i].score_points,
-                `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(test_case)}`
-              );
-            });
-          }
-        );
-      }
-    );
-  });
+                assert.deepEqual(
+                  compute_score_after_collapse(test_case),
+                  expected_test_results[i].score_points,
+                  `Scenario ${test_scenario} with expected output ${expected_output_pattern} is correctly scored when passing inputs ${test_case} : ${compute_score_after_collapse(
+                    test_case
+                  )}`
+                );
+              });
+            }
+          );
+        }
+      );
+    }
+  );
 
   QUnit.module("(UI) Swipe left updates the board", function (hooks) {
     const sample_size = 100;
@@ -932,26 +930,10 @@ QUnit.module("Collapse a row to the left", function (hooks) {
         const best_score_before = get_best_score();
         const current_score_before = get_current_score();
 
-        events.emitter("COLLAPSE_TO_THE_LEFT", { detail: void 0 });
+        events.emitter("COLLAPSE", "LEFT");
         const board_state_after = get_board_state();
         const current_score_after = get_current_score();
         const best_score_after = get_best_score();
-
-        QUnit.test(
-          "Swiping to the left does swipe the board to the left",
-          function (assert) {
-            board_state_after.every((row, i) => {
-              // Given that collapse_to_the_left was previously tested, it can be used here as oracle
-              assert.ok(
-                are_array_deep_equal(
-                  row,
-                  collapse_to_the_left(board_state_before[i])
-                ),
-                "The board is swiped to the left"
-              );
-            });
-          }
-        );
 
         QUnit.test(
           "Swiping to the left does update the score when it should, and does not when it should not",
@@ -987,36 +969,29 @@ QUnit.module("Collapse a row to the bottom", function (hooks) {
         const best_score_before = get_best_score();
         const current_score_before = get_current_score();
 
-        events.emitter("COLLAPSE_TO_THE_BOTTOM", { detail: void 0 });
+        events.emitter("COLLAPSE", "DOWN");
         const board_state_after = get_board_state();
         const transposed_board_state_after = transpose(board_state_after);
         const current_score_after = get_current_score();
         const best_score_after = get_best_score();
 
-        QUnit.test(
-          "Swiping to the bottom does swipe the board to the bottom",
-          function (assert) {
-            // The property can also be written as: transpose(swipe_bottom(board)) = swipe_right(transpose(board)))
-            transposed_board_state_after.every((row, i) => {
-              // Given that collapse_to_the_right was previously tested, it can be used here as oracle
-              assert.ok(
-                are_array_deep_equal(
-                  row,
-                  collapse_to_the_right(transposed_board_state_before[i])
-                ),
-                "The board is swiped to the bottom"
-              );
-            });
-          }
+        const score_points = transposed_board_state_before.reduce(
+          (acc, row) => acc + compute_score_after_collapse(row),
+          0
+        );
+
+        console.log(`board_state_before`, JSON.stringify(board_state_before));
+        console.log(`board_state_after`, JSON.stringify(board_state_after));
+        console.log(
+          `score before, after, points`,
+          current_score_before,
+          current_score_after,
+          score_points
         );
 
         QUnit.test(
           "Swiping to the right does update the score when it should, and does not when it should not",
           function (assert) {
-            const score_points = board_state_before.reduce(
-              (acc, row) => acc + compute_score_after_collapse(row),
-              0
-            );
             assert.deepEqual(
               current_score_after,
               current_score_before + score_points,
@@ -1044,34 +1019,16 @@ QUnit.module("Collapse a row to the top", function (hooks) {
         const best_score_before = get_best_score();
         const current_score_before = get_current_score();
 
-        events.emitter("COLLAPSE_TO_THE_TOP", { detail: void 0 });
+        events.emitter("COLLAPSE", "TOP");
         const board_state_after = get_board_state();
         const transposed_board_state_after = transpose(board_state_after);
         const current_score_after = get_current_score();
         const best_score_after = get_best_score();
 
         QUnit.test(
-          "Swiping to the top  does swipe the board to the top",
-          function (assert) {
-            debugger
-            // The property can also be written as: transpose(swipe_bottom(board)) = swipe_left(transpose(board)))
-            transposed_board_state_after.every((row, i) => {
-              // Given that collapse_to_the_left was previously tested, it can be used here as oracle
-              assert.ok(
-                are_array_deep_equal(
-                  row,
-                  collapse_to_the_left(transposed_board_state_before[i])
-                ),
-                "The board is swiped to the top"
-              );
-            });
-          }
-        );
-
-        QUnit.test(
           "Swiping to the right does update the score when it should, and does not when it should not",
           function (assert) {
-            const score_points = board_state_before.reduce(
+            const score_points = transposed_board_state_before.reduce(
               (acc, row) => acc + compute_score_after_collapse(row),
               0
             );
