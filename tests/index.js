@@ -9,6 +9,7 @@ import {
   get_best_score,
   get_ui_elements,
   events,
+  lenses,
 } from "../index.js";
 import {
   check_generator,
@@ -147,12 +148,12 @@ QUnit.module("Random number generation", function (hooks) {
 
       assert.ok(
         frequency_first_cell_4 > 79 / test_size &&
-          frequency_first_cell_4 < 128 / test_size,
+        frequency_first_cell_4 < 128 / test_size,
         "Frequency of 4s is within parameters"
       );
       assert.ok(
         frequency_second_cell_4 > 79 / test_size &&
-          frequency_second_cell_4 < 128 / test_size,
+        frequency_second_cell_4 < 128 / test_size,
         "Frequency of 4s is within parameters"
       );
 
@@ -1045,7 +1046,132 @@ QUnit.module("Collapse a row to the top", function (hooks) {
 
 QUnit.module("(UI) Game rules", function (hooks) {
   QUnit.module("Game state machine describes accurately the game", function (hooks) {
-    
-    events.emitter("INITIALIZE_APP", { detail: void 0 });
+    const first_cells_seed = "some seed string";
+    const new_cell_seed = "another seed string";
+
+    // TODO: refactor the config passed to the game test generator. Some of this is setting, some is dependency injection, some is initial value for variables, etc.
+    const initial_state = {
+      coverage: {
+        first_cell: { value, x, y },
+        second_cell: { value, x, y },
+        added_cells_history: [],
+        nodes: {
+          GAME_NOT_STARTED: [],
+          GAME_IN_PROGRESS: [],
+          "?": [],
+          GAME_OVER: []
+        },
+        transitions: {
+          "GAME_NOT_STARTED -> GAME_IN_PROGRESS": [],
+          "GAME_IN_PROGRESS -> ?": [],
+          "GAME_IN_PROGRESS -> GAME_IN_PROGRESS": [],
+          "? -> GAME_IN_PROGRESS": [],
+          "? -> GAME_OVER": [],
+        }
+      }
+    };
+    const deps = {
+      collapse_to_the_right,
+      transpose,
+      are_array_deep_equal,
+      getters: {
+        get_board_state,
+        get_current_score,
+        get_best_score,
+        get_game_status,
+      },
+      parameters: {
+        seeds: { first_cells_seed, new_cell_seed },
+        frequencies: [[2, 0.9], [4, 0.1]],
+      },
+    };
+    // That's the generator of game events that simulates a player's game UI interactions 
+    // e.g., swipe right, new game button clicked, etc.
+    const moves_generator = void 0;
+
+    const game_state_machine = new game_fsm({ initial_state, moves_generator, deps });
+
   });
 });
+
+function get_app_state(getters) {
+  const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
+
+  return {
+    board_state: get_board_state(),
+    current_score: get_current_score(),
+    best_score: get_best_score(),
+    game_status: get_game_status(),
+  }
+}
+
+function is_deep_equal_app_state(actual_app_state, expected_app_state) {
+  // As of now, all properties of app state are JSON-serializable so let's do it the lazy way
+  return JSON.stringify(actual_app_state) === JSON.stringify(expected_app_state);
+}
+
+function* game_fsm({ initial_state, moves_generator, deps }) {
+  let extended_state = JSON.parse(JSON.stringify(initial_state));
+  const { collapse_to_the_right, transpose, getters, parameters } = deps;
+  const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
+  const { first_cells_seed, new_cell_seed } = parameters.seeds;
+
+  let control_state = "GAME_NOT_STARTED";
+  extended_state.app_state = get_app_state();
+
+  events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });
+
+
+  /** @typedef {{type: String, detail: any}} */
+  const next_move = moves_generator.next({ board_state: get_board_state(), game_status: get_game_status() });
+
+  const reactions = {
+    GAME_NOT_STARTED: (extended_state, move) => {
+      if (move.type === "START_NEW_GAME") {
+        // TODO
+        events.emitter("START_NEW_GAME", move.detail);
+
+        // TODO: 
+        // - check that I have exactly two cells in the board
+        // - the cells are 2 or 4
+        // - keep track of their position and values for later randomness evaluation
+        // - check that the current score is 0
+        // - check that the best score has not changed
+        // - check that the game status is in progress now
+        if (everything as expected) {
+
+        }
+        else {
+          // TODO: think about what should go in case of error in the extended state or the return value of the fsm!!
+          // 
+          return {
+            control_state: "TEST_FAILED",
+            extended_state,
+          };
+        }
+      }
+      else if (move.type !== "START_NEW_GAME") {
+        // The app state should not change at all
+        events.emitter(move.type, move.detail);
+        const actual_app_state = get_app_state();
+        const expected_app_state = extended_state.app_state;
+        if (is_deep_equal_app_state(actual_app_state, expected_app_state)) {
+          return {
+            control_state: "GAME_IN_PROGRESS",
+            extended_state,
+          };
+        }
+        else {
+          // TODO: put some coverage information, and also failure information too
+          return {
+            control_state: "TEST_FAILED",
+            extended_state,
+          };
+        }
+      }
+    },
+    TEST_FAILED:  (extended_state, move) => {},
+    GAME_IN_PROGRESS:  (extended_state, move) => {},
+  }
+
+}
