@@ -155,3 +155,7 @@ The full algoritm can be conveniently described as a state machine. Please see:
   - First, we eventually found out the error now that we are going to write the tests for the entire game. Nice, but kind of late still.
   - Second, we should have relied on both the oracle and the property. Here, the problem is that we used a property and our property was wrong (for up and down). We would have caught that with the oracle. Reciprocally, if our oracle tests would be wrong somewhere, we are likely to catch those bugs with the property.
   - The end lesson is to use both oracle and PBT to check each other. I guess another lesson is, like when copy pasting, pay more attention. 
+- We were hit by the modification of an implementation detail:
+  - instead of one event for each type of swipe, we are now sending one swipe event parameterized by the direction (up/down/etc.).
+  - it is a downside and a conscious choice. That validates the choice to use lenses to access state as the shape of state may often seen refactoring. Events, less so, though it happened now...
+
