@@ -250,6 +250,7 @@ export function start_new_game(app_state) {
   board_state[second_cell_x][second_cell_y] = second_cell_value;
 
   const new_app_state = compose_lenses_setters([
+    [lenses.set_generators, lenses.get_generators(app_state)],
     [lenses.set_board_state, board_state],
     [lenses.set_best_score, 0],
     [lenses.set_current_score, 0],
@@ -297,8 +298,9 @@ export let elements;
 
 export function render(app_state, event_payload) {
   const { emitter } = events;
+  const {init} = event_payload||{};
 
-  if (app_state === INIT_APP_STATE) {
+  if (init) {
     // That's the first render of tha app
     // Initialize from the template
 
@@ -472,8 +474,6 @@ export function render(app_state, event_payload) {
 // Init key dependencies
 const first_cells_seed = "some seed string";
 const new_cell_seed = "another seed string";
-const random_generator = get_seeded_random_generator(seed);
-const random_cell_generator = get_seeded_random_generator(new_cell_seed);
 
 // Init constants
 const NOT_STARTED = -1;
@@ -685,4 +685,4 @@ Object.keys(events.subscriptions).forEach((event_type) => {
 });
 
 // Initialize the app
-events.emitter("INITIALIZE_APP", { first_cells_seed , new_cell_seed });
+events.emitter("INITIALIZE_APP", { first_cells_seed , new_cell_seed, init: true });
