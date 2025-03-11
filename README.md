@@ -98,7 +98,7 @@ What is the test space for a game with n moves?
   - swipe up
   - swipe down
 - number of moves: n, unbounded
-- so essentially 5^n games
+- so essentially 5^n games of length n
 
 That grows very quickly, and not all tests generate the same amount of confidence. For instance, 1,200 different sequences of moves, none of which ever includes the new game button click generate as much confidence as a single one of those move. There are [several coverage strategies](https://arxiv.org/pdf/2203.09604) that can be applied when testing state machines, e.g.,:
 - all-events coverage
@@ -120,6 +120,16 @@ With a sufficient high length, those tests should achieve:
 
 After all tests are concluded, we will provide a coverage report and reassess if the coverage is found to be unsatisfactory.
 
+### UI testing design
+Remember that we said that tests should simple enough that they don't have to be themselves tested? Here, we are in the case that we are going to write a lot of code to write the test generators, and then test the game from the generated sequence. So we are going to go step by step and test our tests. That is:
+
+- design the test generators
+- write the test generators
+- test the test generators (oracle based testing preferred on a few manual examples)
+- design the game rules testing (that uses the previously generated tests)
+- test it based on manual tests
+  - that requires reproductibility of the random components
+  - We thus update our implementation design by including seed(s) paramters when sending the NEW_GAME event. Once we know the board and numbers that will be generated, we can do oracle-based testing.
 
 The full algoritm can be conveniently described as a state machine. Please see:
 - [the game's state machine](./tests/Game%20state%20machine.png)

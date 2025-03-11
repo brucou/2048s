@@ -234,8 +234,8 @@ export function compute_score_after_collapse(_row) {
   return 0;
 }
 
-export function start_new_game(deps) {
-  const { random_generator } = deps;
+export function start_new_game(app_state) {
+  const { random_generator } = lenses.get_generators(app_state);
   const [
     [first_cell_x, first_cell_y, first_cell_value],
     [second_cell_x, second_cell_y, second_cell_value],
@@ -498,6 +498,8 @@ const INIT_APP_STATE = {
 let app_state = INIT_APP_STATE;
 
 export const lenses = {
+  set_generators: ({ random_generator, random_cell_generator }, app_state) => ({ ...app_state, random_generator, random_cell_generator }),
+  get_generators: (app_state) => ({random_generator: app_state.random_generator, random_cell_generator: app_state.random_cell_generator}),
   get_board_state: (app_state) => app_state.board_state,
   set_board_state: (board_state, app_state) => ({ ...app_state, board_state }),
   get_best_score: (app_state) => app_state.best_score,
@@ -567,9 +569,21 @@ export const events = {
   },
   // Subscriptions returns the new state and the effects to be executed
   subscriptions: {
-    INITIALIZE_APP: (_, __) => [INIT_APP_STATE, ["RENDER"]],
-    START_NEW_GAME: (_, __) => start_new_game({ random_generator }),
+    INITIALIZE_APP: ({ first_cells_seed, new_cell_seed }, __) => {
+      // TODO: update tests
+      const random_generator = get_seeded_random_generator(first_cells_seed);
+      const random_cell_generator = get_seeded_random_generator(new_cell_seed);
+
+      const new_app_state = compose_lenses_setters([
+        [lenses.set_generators, { random_generator, random_cell_generator }],
+      ])(INIT_APP_STATE);
+
+      return [new_app_state, ["RENDER"]]
+    },
+    // TODO: update tests
+    START_NEW_GAME: (_, app_state) => start_new_game(app_state),
     COLLAPSE: (move_direction, app_state) => {
+      const { random_cell_generator } = lenses.get_generators(app_state);
       const moves = {
         RIGHT: [(board_state) => board_state.map(collapse_to_the_right)],
         LEFT: [(board_state) => board_state.map(collapse_to_the_left)],
