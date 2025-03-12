@@ -1044,6 +1044,23 @@ QUnit.module("Collapse a row to the top", function (hooks) {
   });
 });
 
+
+function get_app_state(getters) {
+  const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
+
+  return {
+    board_state: get_board_state(),
+    current_score: get_current_score(),
+    best_score: get_best_score(),
+    game_status: get_game_status(),
+  }
+}
+
+function is_deep_equal_app_state(actual_app_state, expected_app_state) {
+  // As of now, all properties of app state are JSON-serializable so let's do it the lazy way
+  return JSON.stringify(actual_app_state) === JSON.stringify(expected_app_state);
+}
+
 QUnit.module("(UI) Game rules", function (hooks) {
   QUnit.module("Game state machine describes accurately the game", function (hooks) {
     const first_cells_seed = "some seed string";
@@ -1089,26 +1106,31 @@ QUnit.module("(UI) Game rules", function (hooks) {
     // e.g., swipe right, new game button clicked, etc.
     const moves_generator = void 0;
 
-    const game_state_machine = new game_fsm({ initial_state, moves_generator, deps });
+    const game_state_machine = game_fsm({ initial_state, moves_generator, deps });
+
+
+    let control_state;
+    let coverage;
+    // TODO: Refactor in a for let loop (use return when reaching dead control state)
+    do { 
+    const next_move = moves_generator.next({ board_state: get_board_state(), game_status: get_game_status() });
+
+      // TODO: 
+      // - feed the game state machine generate play moves as long as the test in progress
+      const x = game_state_machine.next(next_move); 
+      control_state = x.control_state;
+      coverage = x.coverage;
+    }
+    while (!["TEST_FAILED", "TEST_PASSED"].includes(control_state));
+
+    console.debug(`control state`, control_state);
+    console.log(`coverage`, JSON.stringify(coverage));
+    debugger
+
+
 
   });
 });
-
-function get_app_state(getters) {
-  const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
-
-  return {
-    board_state: get_board_state(),
-    current_score: get_current_score(),
-    best_score: get_best_score(),
-    game_status: get_game_status(),
-  }
-}
-
-function is_deep_equal_app_state(actual_app_state, expected_app_state) {
-  // As of now, all properties of app state are JSON-serializable so let's do it the lazy way
-  return JSON.stringify(actual_app_state) === JSON.stringify(expected_app_state);
-}
 
 function* game_fsm({ initial_state, moves_generator, deps }) {
   let extended_state = JSON.parse(JSON.stringify(initial_state));
@@ -1117,13 +1139,9 @@ function* game_fsm({ initial_state, moves_generator, deps }) {
   const { first_cells_seed, new_cell_seed } = parameters.seeds;
 
   let control_state = "GAME_NOT_STARTED";
-  extended_state.app_state = get_app_state();
+  extended_state.app_state = get_app_state(getters);
 
   events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });
-
-
-  /** @typedef {{type: String, detail: any}} */
-  const next_move = moves_generator.next({ board_state: get_board_state(), game_status: get_game_status() });
 
   const reactions = {
     GAME_NOT_STARTED: (extended_state, move) => {
@@ -1170,8 +1188,16 @@ function* game_fsm({ initial_state, moves_generator, deps }) {
         }
       }
     },
-    TEST_FAILED:  (extended_state, move) => {},
-    GAME_IN_PROGRESS:  (extended_state, move) => {},
+    TEST_FAILED: (extended_state, move) => { },
+    GAME_IN_PROGRESS: (extended_state, move) => { },
+  }
+
+  while (true) {
+    /** @typedef {{type: String, detail: any}} */
+
+
+    const reaction = reactions[next_move];
+    if (!reaction) { }
   }
 
 }
