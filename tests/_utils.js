@@ -51,3 +51,31 @@ export function transpose (array_of_arrays) {
     row.map((_, j) => array_of_arrays[j][i])
   );
 } 
+
+/**
+ * Returns the current state of the board. 0 represents an empty cell.
+ * Any non-zero number represents the value of the cell.
+ * @returns {Array<Array<number>>} 4x4 matrix representing the current state of the board
+ */
+export function get_board_state() {
+  return [0, 1, 2, 3].map((i) =>
+    Array.from(document.querySelectorAll(`[data-row="${i}"]`)).map(
+      (x) => x.textContent | 0
+    )
+  );
+}
+
+export function get_best_score() {
+  return document.querySelector("#best-score-amount").textContent | 0;
+}
+
+export function get_current_score() {
+  return document.querySelector("#current-score-amount").textContent | 0;
+}
+
+// TODO: update after having set up the test fsm structure
+export function get_game_status(){
+  return "IN_PROGRESS"
+}
+
+export const empty_object = {};

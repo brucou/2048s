@@ -158,4 +158,6 @@ The full algoritm can be conveniently described as a state machine. Please see:
 - We were hit by the modification of an implementation detail:
   - instead of one event for each type of swipe, we are now sending one swipe event parameterized by the direction (up/down/etc.).
   - it is a downside and a conscious choice. That validates the choice to use lenses to access state as the shape of state may often seen refactoring. Events, less so, though it happened now...
-
+- We tried to use ES^6generators to implement the state machine. That was too smart for its own good. In the end, all we needed here was a function with a closure. Generators have their quirks, namely, you can create them with parameters, but the first `next` call is different from the others (the parameter is not passed the first time). Then the `yield` syntax is confusing. The `for...` loop is a nice syntax but it does not make sense to complicate the thinking only for a nice syntax. Also I was not fluent in the feature, I just wanted to use precisely to get more experience using them. So that's the mistake. The lesson: make it work the simplest way possible. I always try to do sth more complicated that it should be and I have to learn that lesson time and time again.
+  - on the same note, ES6 generators are probably one of the least used features of JavaScript.
+  - The more I do this work, the more I realize that all is just functions, data structures, and concurrency. And then a lot of syntax around those three.

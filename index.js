@@ -260,27 +260,6 @@ export function start_new_game(app_state) {
   return [new_app_state, ["RENDER"]];
 }
 
-/**
- * Returns the current state of the board. 0 represents an empty cell.
- * Any non-zero number represents the value of the cell.
- * @returns {Array<Array<number>>} 4x4 matrix representing the current state of the board
- */
-export function get_board_state() {
-  return [0, 1, 2, 3].map((i) =>
-    Array.from(document.querySelectorAll(`[data-row="${i}"]`)).map(
-      (x) => x.textContent | 0
-    )
-  );
-}
-
-export function get_best_score() {
-  return document.querySelector("#best-score-amount").textContent | 0;
-}
-
-export function get_current_score() {
-  return document.querySelector("#current-score-amount").textContent | 0;
-}
-
 export function get_ui_elements() {
   const new_game_button = document.querySelector("#new-game-button");
   const cell_elements = [0, 1, 2, 3].map((i) =>
