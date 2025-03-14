@@ -78,4 +78,11 @@ export function get_game_status(){
   return "IN_PROGRESS"
 }
 
+export function get_uuid () {
+  let d = '';
+  while (d.length < 32) d += Math.random().toString(16).substring(2);
+  const vr = ((parseInt(d.substring(16, 17), 16) & 0x3) | 0x8).toString(16);
+  return `${d.substring(0, 8)}-${d.substring(8, 12)}-4${d.substring(13, 16)}-${vr}${d.substring(17, 20)}-${d.substring(20, 32)}`;
+};
+
 export const empty_object = {};
