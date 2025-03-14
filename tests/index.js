@@ -1048,7 +1048,7 @@ QUnit.module("Collapse a row to the top", function (hooks) {
 });
 
 
-function get_app_state(getters) {
+function get_app_state_from_UI(getters) {
   const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
 
   return {
@@ -1109,7 +1109,8 @@ function* game_fsm({ moves_generator, deps }) {
         // - check that the current score is 0
         // - check that the best score has not changed
         // - check that the game status is in progress now
-        if (everything as expected) {
+        if (true) {
+          //everything as expected
 
         }
         else {
@@ -1145,13 +1146,13 @@ function* game_fsm({ moves_generator, deps }) {
     GAME_IN_PROGRESS: (extended_state, move) => { },
   }
 
-let next_move;
+  let next_move;
   while (true) {
-        /** @typedef {{type: String, detail: any}} */
-   next_move = yield {control_state, coverage: extended_state.coverage};
+    /** @typedef {{type: String, detail: any}} */
+    next_move = yield { control_state, coverage: extended_state.coverage };
 
     const reaction = reactions[control_state];
-    if (!reaction) { throw `No reaction implemented for control state ${control_state}`}
+    if (!reaction) { throw `No reaction implemented for control state ${control_state}` }
     else {
       const x = reaction(extended_state, next_move);
       extended_state = x.extended_state;
@@ -1163,90 +1164,254 @@ let next_move;
 
 }
 
-function* dummy_move_generator(n){
+function* dummy_move_generator(n) {
   const move_number = 1;
-  while (move_number++ <= n){
-  const {board_state, game_status} = yield {type: "START_NEW_GAME", detail: void 0}
-  console.debug(`dummy_move_generator > state before move > board_state, game_status`, board_state, game_status)
+  while (move_number++ <= n) {
+    const { board_state, game_status } = yield { type: "START_NEW_GAME", detail: void 0 }
+    console.debug(`dummy_move_generator > state before move > board_state, game_status`, board_state, game_status)
   }
 
-  return {type: "EOF", detail: void 0}
+  return { type: "EOF", detail: void 0 }
 }
 
 QUnit.module("(UI) Game rules", function (hooks) {
 
-  function swing_and_switch_game_strategy(){
+  function swing_and_switch_game_strategy() {
     let control_state = "START_NEW_GAME";
     let extended_state = empty_object;
 
-    return function get_next_move({board_state, _}){
+    return function get_next_move({ board_state, _ }) {
       if (control_state === "START_NEW_GAME") {
         control_state = "LEFT";
         extended_state.board_state_LR = board_state;
         extended_state.board_state_UD = board_state;
 
-        return {type: "START_NEW_GAME", detail: void 0}
+        return { type: "START_NEW_GAME", detail: void 0 }
       }
-     if (control_state === "LEFT") {
+      if (control_state === "LEFT") {
         if (are_boards_deep_equal(board_state, board_state_LR)) {
           control_state = "UP";
           extended_state.board_state_UD = extended_state.board_state_LR;
 
-          return {type: "COLLAPSE", detail: "TOP"}
+          return { type: "COLLAPSE", detail: "TOP" }
         }
         else {
           control_state = "RIGHT";
           extended_state.board_state_LR = extended_state.board_state;
 
-          return {type: "COLLAPSE", detail: "RIGHT"}
+          return { type: "COLLAPSE", detail: "RIGHT" }
         }
       }
       if (control_state === "RIGHT") {
         control_state = "LEFT";
         extended_state.game_status = game_status;
 
-        return {type: "COLLAPSE", detail: "LEFT"}
+        return { type: "COLLAPSE", detail: "LEFT" }
       }
       if (control_state === "UP") {
         control_state = "DOWN";
 
-        return {type: "COLLAPSE", detail: "DOWN"}
+        return { type: "COLLAPSE", detail: "DOWN" }
       }
       if (control_state === "DOWN") {
-        if (!are_boards_deep_equal(board_state, board_state_UD)){
+        if (!are_boards_deep_equal(board_state, board_state_UD)) {
           control_state = "UP";
-        extended_state.board_state_UD = board_state;
+          extended_state.board_state_UD = board_state;
 
-        return {type: "COLLAPSE", detail: "TOP"}
+          return { type: "COLLAPSE", detail: "TOP" }
         }
-        else if (!are_boards_deep_equal(board_state_UD, board_state_LR)){
+        else if (!are_boards_deep_equal(board_state_UD, board_state_LR)) {
           control_state = "LEFT";
-        extended_state.board_state_LR = board_state_UD;
+          extended_state.board_state_LR = board_state_UD;
 
-        return {type: "COLLAPSE",  detail: "LEFT"}
+          return { type: "COLLAPSE", detail: "LEFT" }
         }
         else {
           // board_state, board_state_UD and board_state-LR are equal
           // so that means there are no moves that move the board
           control_state = "DONE";
 
-          return {type: "EOF",  detail: extended_state}
+          return { type: "EOF", detail: extended_state }
         }
       }
-      }
     }
-
-    
   }
 
-  // TODO
-  QUnit.module("Game state machine describes accurately the game", function (hooks) {
-    // For each of the three game play strategies (random, twirl-and-switch, swing-and-switch, cf. excalidraw):
-    // - pick a random number of tests to perform, that is high enough (100?). Call that N.
-    // - pick the max size of the game play sequence (around 10 x the game state machine size = 50?). Call that M_max
-    // - Iterate N times:
+  function game_test_fsm({ deps }) {
+    const initial_state = {
+      coverage: {
+        first_cell: {}, // { value: void 2, x: void 2, y: void 4 },
+        second_cell: {}, // { value: void 4, x: void 1, y: void 3  },
+        added_cells_history: [],
+        score_history: [],
+        // Node x coverage [j] === control state after move j is x (move 0 is GAME_NOT_STARTED always)
+        nodes: {
+          GAME_NOT_STARTED: [],
+          GAME_IN_PROGRESS: [],
+          "?": [],
+          GAME_OVER: []
+        },
+        transitions: {
+          "GAME_NOT_STARTED -> GAME_IN_PROGRESS": [],
+          "GAME_IN_PROGRESS -> ?": [],
+          "GAME_IN_PROGRESS -> GAME_IN_PROGRESS": [],
+          "? -> GAME_IN_PROGRESS": [],
+          "? -> GAME_OVER": [],
+        },
+      }
+    };
+    let extended_state = JSON.parse(JSON.stringify(initial_state));
+    const { collapse_to_the_right, transpose, getters, parameters } = deps;
+    const { first_cells_seed, new_cell_seed } = parameters.seeds;
+
+
+    let control_state = "GAME_NOT_STARTED";
+    extended_state. app_state = get_app_state(getters);
+
+    events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });
+
+    return function (next_move) {
+      const { type, detail } = next_move;
+
+      // Get the state before the next move
+      const { best_score, board_state, current_score, game_status } = get_app_state_from_UI(getters);
+
+      if (control_state === "GAME_NOT_STARTED") {
+        if (type === "START_NEW_GAME") {
+          const transition = "GAME_NOT_STARTED -> GAME_IN_PROGRESS";
+
+          events.emitter("START_NEW_GAME", detail);
+          // Get the state after the next move
+          extended_state.app_state = get_app_state_from_UI(getters);
+          const { best_score: new_best_score, board_state: new_board_state, current_score: new_current_score, game_status: new_game_status } = extended_state.app_state;
+
+          // Check that the new game state is as expected per the game rules
+          // - exactly two cells in the board
+          // - the cells are 2 or 4
+          // - current score is 0
+          // - best score has not changed
+          // - game status is in progress now
+          const are_exactly_two_cells_on_the_board = board_state.reduce((acc, row) => row.reduce((acc, cell) => cell ? acc + 1 : acc, acc), 0) === 2;
+          const are_cells_2_or_4 = board_state.every(row => row.every(cell => cell ? cell === 2 || cell === 4 : true));
+          const is_current_score_0 = new_current_score === current_score && new_current_score === 0;
+          const is_best_score_unchanged = new_best_score === best_score;
+          const is_game_status_in_progress = new_game_status === "IN_PROGRESS";
+
+          const [first_cell, second_cell] = board_state.reduce((acc, row, i) => row.reduce((acc, cell, j) => cell ? acc.concat({ value: cell, y: i, x: j }) : acc, acc), []);
+          extended_state.coverage.first_cell = first_cell;
+          extended_state.coverage.second_cell = second_cell;
+          extended_state.coverage.added_cells_history = [first_cell, second_cell];
+          extended_state.coverage.score_history = [best_score, new_best_score];
+          extended_state.coverage.nodes["GAME_NOT_STARTED"] = [true, false];
+          extended_state.coverage.nodes["GAME_IN_PROGRESS"] = [false, true];
+          extended_state.coverage.nodes["?"] = [false, false];
+          extended_state.coverage.nodes["GAME_OVER"] = [false, false];
+          extended_state.coverage.transitions[transition] = [void 0, true];
+
+          if (are_exactly_two_cells_on_the_board && are_cells_2_or_4 && is_current_score_0 && is_best_score_unchanged && is_game_status_in_progress) {
+            // - keep track of their position and values for later randomness evaluation
+            control_state = "GAME_IN_PROGRESS";
+
+            return {
+              control_state,
+              extended_state,
+            };
+          }
+          else {
+            // Transition GAME_NOT_STARTED -> GAME_IN_PROGRESS not as per game rules
+            control_state = "TEST_FAILED";
+
+            return {
+              control_state,
+              extended_state,
+              debug: {
+                are_exactly_two_cells_on_the_board, are_cells_2_or_4, is_current_score_0, is_best_score_unchanged, is_game_status_in_progress,
+              }
+            };
+          }
+        }
+
+        if (type !== "START_NEW_GAME"){
+          // TODO: nothing should change in the board
+          const transition = "GAME_NOT_STARTED -> GAME_NOT_STARTED";
+
+          events.emitter(type, detail);
+
+          extended_state.app_state = get_app_state_from_UI(getters);
+          const prev_app_state = {board_state, current_score, best_score, game_status};
+          if (is_deep_equal_app_state(prev_app_state, extended_state.app_state)){
+            // TODO: GOOD
+          }
+          else {
+            // TODO: bad
+          }
+        }
+      }
+
+      const reactions = {
+        GAME_NOT_STARTED: (extended_state, move) => {
+          if (move.type === "START_NEW_GAME") {
+            // TODO
+            events.emitter("START_NEW_GAME", move.detail);
+
+            // TODO: 
+
+            if (true) {
+              //everything as expected
+
+            }
+            else {
+              // TODO: think about what should go in case of error in the extended state or the return value of the fsm!!
+              // 
+              return {
+                control_state: "TEST_FAILED",
+                extended_state,
+              };
+            }
+          }
+          else if (move.type !== "START_NEW_GAME") {
+            // The app state should not change at all
+            events.emitter(move.type, move.detail);
+            const actual_app_state = get_app_state();
+            const expected_app_state = extended_state.app_state;
+            if (is_deep_equal_app_state(actual_app_state, expected_app_state)) {
+              return {
+                control_state: "GAME_IN_PROGRESS",
+                extended_state,
+              };
+            }
+            else {
+              // TODO: put some coverage information, and also failure information too
+              return {
+                control_state: "TEST_FAILED",
+                extended_state,
+              };
+            }
+          }
+        },
+        TEST_FAILED: (extended_state, move) => { },
+        GAME_IN_PROGRESS: (extended_state, move) => { },
+      }
+
+    }
+  }
+  // For each of the three game play strategies (random, twirl-and-switch, swing-and-switch, cf. excalidraw):
+  const game_play_strategies = [swing_and_switch_game_strategy];
+
+  // - pick a random number of tests to perform, that is high enough (100?). Call that N.
+  const size = Math.trunc(100 * Math.random());
+
+  // - pick the max size of the game play sequence (around 10 x the game state machine size = 50?). Call that M_max
+  const M_max = 50;
+
+  // - Iterate N times:
+  for (let test_number = 0; test_number < size; test_number++) {
     //   - pick a M < M_max, size of the game play sequence to test against
+    const m = Math.trunc(M_max * Math.random());
+
     //   - Initialize the game test state machine
+
+
     //     - coverage information (data coverage and state/transition coverage)
     //     - some dependency injections, so the machine can be more easily tested independently
     //       - in short, every function used in the state machine should be in scope, or injected through parameters
@@ -1266,61 +1431,64 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
     // TODO: the problem now is I have a test sequence that fails but how do I reproduce it? I need the seed and the index to reproduce the generator and cells
     // Not even so. I would also need to generate the previous games as they will also use the same generator. So each test sequence must use its own seed so it can be reproduced!
-    
-  });
 
-  QUnit.module("Game state machine describes accurately the game", function (hooks) {
-    const first_cells_seed = "some seed string";
-    const new_cell_seed = "another seed string";
+  }
 
-    // TODO: refactor the config passed to the game test generator. Some of this is setting, some is dependency injection, some is initial value for variables, etc.
+});
 
-    const deps = {
-      collapse_to_the_right,
-      transpose,
-      are_array_deep_equal,
-      getters: {
-        get_board_state,
-        get_current_score,
-        get_best_score,
-        get_game_status,
-      },
-      parameters: {
-        seeds: { first_cells_seed, new_cell_seed },
-        frequencies: [[2, 0.9], [4, 0.1]],
-      },
-    };
-    // That's the generator of game events that simulates a player's game UI interactions 
-    // e.g., swipe right, new game button clicked, etc.
-    // TODO: replace by actual multiple iteration of all play strategies
-    const moves_generator = dummy_move_generator(2);
-    moves_generator.next();
+// TODO
 
-    const game_state_machine = game_fsm({ moves_generator, deps });
-    // First call must be without parameters
-    game_state_machine.next();
+QUnit.module("Game state machine describes accurately the game", function (hooks) {
+  const first_cells_seed = "some seed string";
+  const new_cell_seed = "another seed string";
+
+  // TODO: refactor the config passed to the game test generator. Some of this is setting, some is dependency injection, some is initial value for variables, etc.
+
+  const deps = {
+    collapse_to_the_right,
+    transpose,
+    are_array_deep_equal,
+    getters: {
+      get_board_state,
+      get_current_score,
+      get_best_score,
+      get_game_status,
+    },
+    parameters: {
+      seeds: { first_cells_seed, new_cell_seed },
+      frequencies: [[2, 0.9], [4, 0.1]],
+    },
+  };
+  // That's the generator of game events that simulates a player's game UI interactions 
+  // e.g., swipe right, new game button clicked, etc.
+  // TODO: replace by actual multiple iteration of all play strategies
+  const moves_generator = dummy_move_generator(2);
+  moves_generator.next();
+
+  const game_state_machine = game_fsm({ moves_generator, deps });
+  // First call must be without parameters
+  game_state_machine.next();
 
 
-    let control_state;
-    let coverage;
-    // TODO: Refactor in a for let loop (use return when reaching dead control state)
-    do { 
+  let control_state;
+  let coverage;
+  // TODO: Refactor in a for let loop (use return when reaching dead control state)
+  do {
     const next_move = moves_generator.next({ board_state: get_board_state(), game_status: get_game_status() });
 
-      // TODO: 
-      // - feed the game state machine generate play moves as long as the test in progress
-      const x = game_state_machine.next(next_move); 
-      control_state = x.control_state;
-      coverage = x.coverage;
-    }
-    while (!["TEST_FAILED", "TEST_PASSED"].includes(control_state));
+    // TODO: 
+    // - feed the game state machine generate play moves as long as the test in progress
+    const x = game_state_machine.next(next_move);
+    control_state = x.control_state;
+    coverage = x.coverage;
+  }
+  while (!["TEST_FAILED", "TEST_PASSED"].includes(control_state));
 
-    console.debug(`control state`, control_state);
-    console.log(`coverage`, JSON.stringify(coverage));
-    debugger
+  console.debug(`control state`, control_state);
+  console.log(`coverage`, JSON.stringify(coverage));
+  debugger
 
 
 
-  });
 });
 
