@@ -145,6 +145,7 @@ The full algoritm can be conveniently described as a state machine. Please see:
 ## JS
 
 ## AI
+- Got a great answer to make an overlay that displays game over. Was a bit unclear where to add one CSS line but the answer was correct, it was my ignorance that caused the issue. After asking for clarification the issue was solved. AI is of greater help in the places where my skills or experience is weaker, which is the case of CSS.
 
 ## Testing
 - State machines are great as specifications tools. They can be used to accurately but concisely describe the game play but also to test the game itself.
@@ -161,3 +162,10 @@ The full algoritm can be conveniently described as a state machine. Please see:
 - We tried to use ES^6generators to implement the state machine. That was too smart for its own good. In the end, all we needed here was a function with a closure. Generators have their quirks, namely, you can create them with parameters, but the first `next` call is different from the others (the parameter is not passed the first time). Then the `yield` syntax is confusing. The `for...` loop is a nice syntax but it does not make sense to complicate the thinking only for a nice syntax. Also I was not fluent in the feature, I just wanted to use precisely to get more experience using them. So that's the mistake. The lesson: make it work the simplest way possible. I always try to do sth more complicated that it should be and I have to learn that lesson time and time again.
   - on the same note, ES6 generators are probably one of the least used features of JavaScript.
   - The more I do this work, the more I realize that all is just functions, data structures, and concurrency. And then a lot of syntax around those three.
+
+
+- took way too long in setting fixed seeds so I could have reproductive tests...
+- should have started with testing the move generators. It was too much to do both move generator and test state machine together. The barrier was that the move generator required simulating the move to pass the updated state but that was easier to solve that originally thought -> `play` function that runs a move. Ended up doing that much too late in the game after painful refactoring.
+- After being sure that the move generator work fine, it is easier to focus on the game test state machine.
+- What I tried to do in the beginning is to do half the move generator and half the game test state machine and combine them but it was too complex to find which pieces to do in each so a test would be possible. One again the learning is bring it to smaller pieces and find a way to test those pieces before assembling them into larger pieces.
+- Refactoring is harder on long codes without types or IDE support. One can say to be extra careful but there will still be minor mistakes and some time wasted. In this case, it was not too much time lost. The idea to start with writing code that is repetitive and then refactor for conciseness is a good one. Just that the refactoring introduces bug because 2 pieces of codes can look very similar but one small thing change and the refactor introduced a bug. So, to do AFTER all tests are passing, it is better. OR suddenly start to type stuff just what is necessary to suppor the refactoring.

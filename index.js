@@ -1,3 +1,5 @@
+import {GAME_IN_PROGRESS, GAME_NOT_STARTED, GAME_OVER} from "./constants.js";
+
 /**
  * Random generator
  * Returns a function which generates a number between 0 and 1.
@@ -254,7 +256,7 @@ export function start_new_game(app_state) {
     [lenses.set_board_state, board_state],
     [lenses.set_best_score, 0],
     [lenses.set_current_score, 0],
-    [lenses.set_game_status, IN_PROGRESS],
+    [lenses.set_game_status, GAME_IN_PROGRESS],
   ])(INIT_APP_STATE);
 
   return [new_app_state, ["RENDER"]];
@@ -270,7 +272,9 @@ export function get_ui_elements() {
   const best_score_el = document.querySelector("#best-score-amount");
   const current_score_el = document.querySelector("#current-score-amount");
 
-  return { new_game_button, cell_elements, best_score_el, current_score_el };
+  const game_over_el = document.querySelector("#game-over-overlay");
+
+  return { new_game_button, cell_elements, best_score_el, current_score_el, game_over_el };
 }
 
 export let elements;
@@ -435,6 +439,7 @@ export function render(app_state, event_payload) {
     const board_state = lenses.get_board_state(app_state);
     const best_score = lenses.get_best_score(app_state);
     const current_score = lenses.get_current_score(app_state);
+    const game_status = lenses.get_game_status(app_state);
     const { cell_elements, best_score_el, current_score_el } = elements;
 
     // Update the board
@@ -447,6 +452,13 @@ export function render(app_state, event_payload) {
     // Update the scores
     best_score_el.textContent = best_score;
     current_score_el.textContent = current_score;
+
+    // Update game status
+    if (game_status !== GAME_OVER) {
+      elements.game_over_el.classList.add("hidden");
+    } else {
+      elements.game_over_el.classList.remove("hidden");
+    }
   }
 }
 
@@ -454,10 +466,7 @@ export function render(app_state, event_payload) {
 const first_cells_seed = "some seed string";
 const new_cell_seed = "another seed string";
 
-// Init constants
-const NOT_STARTED = -1;
-const IN_PROGRESS = 1;
-const GAME_OVER = 0;
+
 // With such a high upper bound for random numbers, we can get 30x30 boards
 // and still cover the entire board
 const UPPER_BOUND = 1000;
@@ -471,7 +480,7 @@ const INIT_APP_STATE = {
   ],
   best_score: 0,
   current_score: 0,
-  game_status: NOT_STARTED,
+  game_status: GAME_NOT_STARTED,
 };
 
 let app_state = INIT_APP_STATE;
@@ -596,7 +605,7 @@ export const events = {
 
       // If the game is in progress
       const game_status = lenses.get_game_status(app_state);
-      if (game_status !== IN_PROGRESS) return [app_state, void 0];
+      if (game_status !== GAME_IN_PROGRESS) return [app_state, void 0];
 
       // then swipe the board right and compute the new scores
       const board_state = lenses.get_board_state(app_state);
@@ -640,7 +649,7 @@ export const events = {
       if (is_move_possible) {
         const new_app_state = compose_lenses_setters([
           [lenses.set_board_state, board_state_with_new_cell],
-          [lenses.set_game_status, IN_PROGRESS],
+          [lenses.set_game_status, GAME_IN_PROGRESS],
           [lenses.set_current_score, new_score],
           [lenses.set_best_score, new_best_score],
         ])(app_state);
