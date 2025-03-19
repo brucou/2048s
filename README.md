@@ -143,6 +143,16 @@ The full algoritm can be conveniently described as a state machine. Please see:
 ## CSS
 
 ## JS
+- given the time we spent writing those state machines but without maybe enough precision in the formalism we used in our drawing, the time we spent thinking on how to structure the code etc., we may have reached the point where it is worth introducing a dependency who did the leg work already for us. As usual, it is subjective, but if state machines are going to be a common test instrument, it should really be worth investing in a state machine library (cf. [kingly](https://brucou.github.io/documentation/)). In the same way, one would not rewrite a sort algorithm from scratch, it is better to use a (zero-dependency) library. Typical tradeoff of buy or make decisions. Let's sum pros and cons:
+- Pros:
+  - already tested (check the thoroughness of the tests though!!)
+  - already comes with a design that (hopefully) is proven to work and makes implementation easy
+  - may even comes with utilities and dev tools (visualization, debugging, etc.)
+- Cons:
+  - documentation is quite often lacking in third-party dependency - and so are tests...
+  - may need to spend time reviewing//benchmarking competing libraries and evaluate their design (choice paradox)
+  - learning curve depending on the existence of the above + examples
+  - the tree may be packaged with the forest.
 
 ## AI
 - Got a great answer to make an overlay that displays game over. Was a bit unclear where to add one CSS line but the answer was correct, it was my ignorance that caused the issue. After asking for clarification the issue was solved. AI is of greater help in the places where my skills or experience is weaker, which is the case of CSS.
@@ -169,3 +179,12 @@ The full algoritm can be conveniently described as a state machine. Please see:
 - After being sure that the move generator work fine, it is easier to focus on the game test state machine.
 - What I tried to do in the beginning is to do half the move generator and half the game test state machine and combine them but it was too complex to find which pieces to do in each so a test would be possible. One again the learning is bring it to smaller pieces and find a way to test those pieces before assembling them into larger pieces.
 - Refactoring is harder on long codes without types or IDE support. One can say to be extra careful but there will still be minor mistakes and some time wasted. In this case, it was not too much time lost. The idea to start with writing code that is repetitive and then refactor for conciseness is a good one. Just that the refactoring introduces bug because 2 pieces of codes can look very similar but one small thing change and the refactor introduced a bug. So, to do AFTER all tests are passing, it is better. OR suddenly start to type stuff just what is necessary to suppor the refactoring.
+- I also forgot to implement the EOF event in the state machine. That mistake came from the lack of precision in the state machine I drew. "fails" is not an event, EOF is one. I implemented fails as it was obvious in the implementation flow and then EOF did not appear in the implementation but came from the move generator. This is also where types would have helped or forced surfacing that. 
+
+- for reproductibility purposes, I had to set a fix value for the length of the tests and size of play sequence. Otherwise, the "rerun" a failing test would not work. Maybe using QUnit.config.seed would help, but it seems that only ensures tests are run in a specific order every time. Rerunning just one test should break that ordering.
+
+
+- in the end it was way too much so we stop there and open another branch to continue
+- lessons learnt, start with oracle testing even if it looks painfully manual. The added difficulty here was the randomness but we solved that with the seeds. Make the seeds a parameter so it can be tested. Design for test is the learning.
+
+- conclusion: this was poorly planned, designed, and implemented which makes it a great learning experience.

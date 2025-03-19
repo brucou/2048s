@@ -75,7 +75,6 @@ export function get_current_score() {
   return document.querySelector("#current-score-amount").textContent | 0;
 }
 
-// TODO: missing GAME_NOT_STARTED (empty board?? && no overlay)
 export function get_game_status() {
   // Check if game over overlay is visible
   const overlay = document.querySelector("#game-over-overlay");
@@ -94,9 +93,7 @@ export function get_uuid() {
   return `${d.substring(0, 8)}-${d.substring(8, 12)}-4${d.substring(13, 16)}-${vr}${d.substring(17, 20)}-${d.substring(20, 32)}`;
 };
 
-export function get_app_state_from_UI(getters) {
-  const { get_board_state, get_current_score, get_best_score, get_game_status } = getters;
-
+export function get_app_state_from_UI() {
   return {
     board_state: get_board_state(),
     current_score: get_current_score(),
@@ -143,12 +140,12 @@ export function get_first_two_cells(board_state) {
   return board_state.reduce((acc, row, i) => row.reduce((acc, cell, j) => cell ? acc.concat({ value: cell, y: i, x: j }) : acc, acc), []);
 }
 
-export function take_snapshot_before_after(next_move, emitter, getters) {
+export function take_snapshot_before_after(next_move, emitter) {
   const { type, detail } = next_move;
 
-  const app_state = get_app_state_from_UI(getters);
+  const app_state = get_app_state_from_UI();
   emitter(type, detail);
-  const new_app_state = get_app_state_from_UI(getters);
+  const new_app_state = get_app_state_from_UI();
 
   return [app_state, new_app_state]
 }
@@ -161,47 +158,29 @@ export function update_coverage_after_start_new_game(coverage, transition, app_s
 
   coverage.first_cell = first_cell;
   coverage.second_cell = second_cell;
-  coverage.added_cells_history = [first_cell, second_cell];
-  coverage.score_history = [current_score, new_current_score];
-  coverage.nodes["GAME_NOT_STARTED"].push(false);
-  coverage.nodes["GAME_IN_PROGRESS"].push(true);
-  coverage.nodes["GAME_OVER"].push(false);
-  // TODO: not correct, I need to add false everywhere else too... MM data structure issue here
-  coverage.transitions[transition].push(true);
+  coverage.added_cells_history.push([first_cell, second_cell]);
+  coverage.app_state_history.push(new_app_state);
 
   return coverage
 }
 
 export function update_coverage_after_no_change(coverage, transition, app_state, control_state) {
   coverage.added_cells_history.push(void 0);
-  coverage.score_history.push(app_state.current_score);
-  // TODO: should be done in one go, true somehwere, false elsewhere
-  coverage.nodes["GAME_NOT_STARTED"].push(control_state === "GAME_NOT_STARTED");
-  coverage.nodes["GAME_IN_PROGRESS"].push(control_state === "GAME_IN_PROGRESS");
-  coverage.nodes["GAME_OVER"].push(control_state === "GAME_OVER");
-  // TODO: not correct, I need to add false everywhere else too... MM data structure issue here
-  coverage.transitions[transition].push(true);
+  coverage.app_state_history.push(app_state);
 
   return coverage
 }
 
 export function update_coverage_after_collapse_move(coverage, transition, new_cell, app_state, new_app_state) {
   const  { value, x, y } = new_cell;
-  const is_game_over = new_app_state.new_game_status === GAME_OVER;
 
   coverage.added_cells_history.push({ value, x, y });
-  coverage.score_history.push(new_app_state.new_current_score);
-  coverage.nodes["GAME_NOT_STARTED"].push(false);
-  coverage.nodes["GAME_IN_PROGRESS"].push(!is_game_over);
-  coverage.nodes["GAME_OVER"].push(is_game_over);
-  // TODO: not correct, I need to add false everywhere else too... MM data structure issue here
-  coverage.transitions[transition].push(true);
+  coverage.app_state_history.push(new_app_state);
 
   return coverage
 }
 
-export function get_added_cell_after_play(play, detail, board_state, new_board_state) {
-  const new_board_state_without_added_cell = play(board_state, detail);
+export function get_added_cell_after_play(new_board_state_without_added_cell, new_board_state) {
 
   return get_board_diff(new_board_state_without_added_cell, new_board_state);
 }
@@ -213,4 +192,29 @@ export function is_expected_cell_value(new_cells) {
 
   return is_expected_cell_value
 }
+
+export function is_2048(board_state) {
+  return board_state.some(row => row.some(cell => cell === 2048))
+}
+
+export function print_move(move, control_state){
+  const {type, detail} = move;
+  let control_state_char = control_state === "GAME_OVER" ? "▒" : control_state === "GAME_IN_PROGRESS"? " " : control_state === "TEST_PASSED" ? "🏅":"▪";
+  let move_char = "";
+  if (type === "COLLAPSE") {
+    if (detail === "RIGHT"){move_char = "→"}
+    if (detail === "LEFT"){move_char = "←"}
+    if (detail === "TOP"){move_char = "↑"}
+    if (detail === "DOWN"){move_char = "↓"}
+  }
+  if (type === "START_NEW_GAME") move_char = "🎲"
+  if (type === "EOF") move_char = "!"
+
+  return move_char + control_state_char
+}
+
+export function print_board_state (board_state) {
+  return board_state.map(row => row.concat("|")).join("/n");
+}
+
 export const empty_object = {};

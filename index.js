@@ -1,4 +1,4 @@
-import {GAME_IN_PROGRESS, GAME_NOT_STARTED, GAME_OVER} from "./constants.js";
+import { GAME_IN_PROGRESS, GAME_NOT_STARTED, GAME_OVER } from "./constants.js";
 
 /**
  * Random generator
@@ -45,7 +45,7 @@ export function get_seeded_random_generator(seed) {
   }
 
   let generated_seed = MurmurHash3("some seed")();
-  return SimpleFastCounter32(generated_seed, MurmurHash3("some seed")());
+  return SimpleFastCounter32(generated_seed, MurmurHash3(seed)());
 }
 
 export function transpose(array_of_arrays) {
@@ -234,6 +234,17 @@ export function compute_score_after_collapse(_row) {
   }
 
   return 0;
+}
+
+export function play(board_state, detail, { collapse_to_the_right, transpose }) {
+  switch (detail) {
+    case "RIGHT": return board_state.map(collapse_to_the_right);
+    case "LEFT": return board_state.map(collapse_to_the_left);
+    case "DOWN": return transpose(transpose(board_state).map(collapse_to_the_right));
+    case "TOP": return transpose(transpose(board_state).map(collapse_to_the_left));
+  }
+
+  throw `Invalid play direction ${detail}`
 }
 
 export function start_new_game(app_state) {
@@ -538,6 +549,9 @@ export const behavior = {
       // Update the app state
       app_state = updated_state;
 
+      console.info(`event`, event.type, event.detail);
+      console.info(`state`, lenses.get_board_state(updated_state));
+
       // Execute the effects
       effects &&
         effects.forEach((effect) =>
@@ -560,7 +574,6 @@ export const events = {
   // Subscriptions returns the new state and the effects to be executed
   subscriptions: {
     INITIALIZE_APP: ({ first_cells_seed, new_cell_seed }, __) => {
-      // TODO: update tests
       const random_generator = get_seeded_random_generator(first_cells_seed);
       const random_cell_generator = get_seeded_random_generator(new_cell_seed);
 
@@ -570,7 +583,6 @@ export const events = {
 
       return [new_app_state, ["FIRST_RENDER"]]
     },
-    // TODO: update tests
     START_NEW_GAME: (_, app_state) => start_new_game(app_state),
     COLLAPSE: (move_direction, app_state) => {
       const { random_cell_generator } = lenses.get_generators(app_state);
@@ -603,11 +615,12 @@ export const events = {
 
       const [update_board] = moves[move_direction];
 
-      // If the game is in progress
+      // If the game is ove or is yet to start, don't do nothing
       const game_status = lenses.get_game_status(app_state);
-      if (game_status !== GAME_IN_PROGRESS) return [app_state, void 0];
+      if (game_status === GAME_NOT_STARTED || game_status === GAME_OVER) return [app_state, void 0];
 
-      // then swipe the board right and compute the new scores
+      // If the game is in progress
+      // then swipe the board in the given direction and compute the new scores
       const board_state = lenses.get_board_state(app_state);
       const collapsed_board_state = update_board(board_state);
       const score_points = scores[move_direction](board_state);
@@ -617,6 +630,19 @@ export const events = {
         lenses.get_best_score(app_state),
         new_score
       );
+      const is_2048 = collapsed_board_state.some(row => row.some(cell => cell === 2048));
+
+      // If we reached the goal, end the game
+      if (is_2048) {
+        const new_app_state = compose_lenses_setters([
+          [lenses.set_board_state, collapsed_board_state],
+          [lenses.set_game_status, GAME_OVER],
+          [lenses.set_current_score, new_score],
+          [lenses.set_best_score, new_best_score],
+        ])(app_state);
+
+        return [new_app_state, ["RENDER"]];
+      }
 
       // If the swipe move does not change the board in any way,
       // don't do anything.
@@ -646,6 +672,7 @@ export const events = {
           get_empty_cells(moves[move_direction][0](board_state_with_new_cell))
             .length !== 0
       );
+      // If there are possible moves still, the game goes on
       if (is_move_possible) {
         const new_app_state = compose_lenses_setters([
           [lenses.set_board_state, board_state_with_new_cell],
@@ -656,6 +683,7 @@ export const events = {
 
         return [new_app_state, ["RENDER"]];
       } else {
+        // If not, the game is over!
         const new_app_state = compose_lenses_setters([
           [lenses.set_board_state, board_state_with_new_cell],
           [lenses.set_game_status, GAME_OVER],
@@ -675,4 +703,5 @@ Object.keys(events.subscriptions).forEach((event_type) => {
 });
 
 // Initialize the app
+console.info(`game with seeds `, first_cells_seed, new_cell_seed);
 events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });
