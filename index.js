@@ -291,7 +291,6 @@ export function get_ui_elements() {
 export let elements;
 
 export function render(app_state, event_payload) {
-  const { emitter } = events;
   const { init } = event_payload || {};
 
   if (init) {
@@ -308,22 +307,22 @@ export function render(app_state, event_payload) {
     // New game button
     const new_game_button = document.querySelector("#new-game-button");
     new_game_button?.addEventListener("click", (_) =>
-      emitter("START_NEW_GAME", { detail: void 0 })
+      events.emitter("START_NEW_GAME", { detail: void 0 })
     );
 
     // Swipe keys
     document.addEventListener("keydown", (event) => {
       if (event.key.toUpperCase() === "K") {
-        emitter("COLLAPSE", "RIGHT");
+        events.emitter("COLLAPSE", "RIGHT");
       }
-      if (event.key.toUpperCase === "H") {
-        emitter("COLLAPSE", "LEFT");
+      if (event.key.toUpperCase() === "H") {
+        events.emitter("COLLAPSE", "LEFT");
       }
-      if (event.key.toUpperCase === "N") {
-        emitter("COLLAPSE", "DOWN");
+      if (event.key.toUpperCase() === "N") {
+        events.emitter("COLLAPSE", "DOWN");
       }
-      if (event.key.toUpperCase === "U") {
-        emitter("COLLAPSE", "TOP");
+      if (event.key.toUpperCase() === "U") {
+        events.emitter("COLLAPSE", "TOP");
       }
     });
 
@@ -350,7 +349,7 @@ export function render(app_state, event_payload) {
             end_x > start_x &&
             Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
           ) {
-            emitter("COLLAPSE", "RIGHT");
+            events.emitter("COLLAPSE", "RIGHT");
           }
         }
       });
@@ -379,7 +378,7 @@ export function render(app_state, event_payload) {
             end_x < start_x &&
             Math.abs(end_x - start_x) > Math.abs(end_y - start_y)
           ) {
-            emitter("COLLAPSE", "LEFT");
+            events.emitter("COLLAPSE", "LEFT");
           }
         }
       });
@@ -408,7 +407,7 @@ export function render(app_state, event_payload) {
             end_y > start_y &&
             Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
           ) {
-            emitter("COLLAPSE", "DOWN");
+            events.emitter("COLLAPSE", "DOWN");
           }
         }
       });
@@ -437,7 +436,7 @@ export function render(app_state, event_payload) {
             end_y < start_y &&
             Math.abs(end_y - start_y) > Math.abs(end_x - start_x)
           ) {
-            emitter("COLLAPSE", "TOP");
+            events.emitter("COLLAPSE", "TOP");
           }
         }
       });
@@ -516,6 +515,7 @@ export const lenses = {
 const empty_array = [];
 export const noop = () => empty_array;
 
+let history = {moves: [], boards: []};
 /**
  * The behavior object contains the effects that can be triggered by the events.
  * It also contains a `global_listener` that listens to all configured events,
@@ -549,8 +549,8 @@ export const behavior = {
       // Update the app state
       app_state = updated_state;
 
-      console.info(`event`, event.type, event.detail);
-      console.info(`state`, lenses.get_board_state(updated_state));
+      history.moves.push(event.type, event.detail);
+      history.boards.push(lenses.get_board_state(updated_state));
 
       // Execute the effects
       effects &&
@@ -641,6 +641,8 @@ export const events = {
           [lenses.set_best_score, new_best_score],
         ])(app_state);
 
+        console.info(`you won`, history.moves, history.boards);
+
         return [new_app_state, ["RENDER"]];
       }
 
@@ -690,6 +692,8 @@ export const events = {
           [lenses.set_current_score, new_score],
           [lenses.set_best_score, new_best_score],
         ])(app_state);
+
+        console.info(`you lost`, history.moves, history.boards);
 
         return [new_app_state, ["RENDER"]];
       }

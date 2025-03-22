@@ -49,44 +49,25 @@ Assuming our testing state machine is correct, the previous illustration showcas
 
 This is one value of using state machines for both game modelization and game tests. It helps us litterally see where remaining bugs could hide and a path to chase them.
 
-All this was transition coverage. A state machine is state and transitions, but also data. Regarding data coverage, our swing and switch strategy:
+All this was transition coverage. A state machine is state and transitions, but the data it encapsulates. Regarding data coverage, our swing and switch strategy:
 - did not allow us to test the best score computation in the case when the best score comes from a previous game
 - did not allow us to test that 2048 ends the game and there is no game with a higher value than that
 - we did test that new cells are 2 or 4 and only one new cell (if any) appear after a move
 
 In the light of this, the swirl and switch is not likely to help us get more state/transition coverage. It will increase our data coverage (we may get longer game plays) but not in significant ways:
-- to test user wins, we have no other choice than to well, win a game for a given seed, and test back the moves that were executed to win
-- to increase data coverage for best score, we can just run a game, then simulate a new game click, then run another game. We can do that by taking two sequence of plays from the swing and switch strategy and intercalating a new creation in between.
+- to test user wins, we have no other choice than to, well, win a game for a given seed, and test back the moves that were executed to win
+- to increase data coverage for best score, we can just run a game, then simulate a new game click, then run another game. We can do that by taking two sequence of plays from the swing and switch strategy and intercalating a new creation in between. An alternative is to put the board is a specific state where a single move wins the game. I decided against that as once again that requires knowing internals of the implementation.
 
 So, we decide against writing the swirl and switch game play generator -- though it would have been fun to see it run. 
 
 The last strategy is to generate moves randomly, so at any point of time, the next move could be any of the registered moves for the application. This, done with enough repetition, would allow us to test the paths from our illustration that are not in blue (with the exception of a user wins which is unlikely enough to not come up by chance).
 
-- Tests:
-  - We generate N random game plays. For each, we choose a M random number of moves, then a random move for each turn, then apply that.
-  - After each random move, we check that the game requirement holds
+Lastly, we are going to test the 2048 winning condition with a sample game with a known seed that we have played and win. In summary:
 
-But we have no way to know that the game is recognized as over purely from reading the UI! So we add a requirement which is to add a board overlay that says game over. We can check the existence of the overlay in our tests. So even if the game is over, we can still send swipe events and check each time that the overlay remains put.
+- we implement the random move generator
+![State machine for random move generator](./tests/state%20machine%20for%20random%20move%20generator.png)
 
-We should try to find some property or oracle testing so we can test all conditions of the requirements on games of arbitrary length.
-Generate random game:
-- start new game
-- stack of moves = all four moves
-- pick one from the stack
-- apply it
-- if the board does not change, pick another move
-- if there are no moves left, the game is over -> check that the board says so, continue with the rest of the moves till chosen  number of moves reached
-- if the move is possible, the board changes, and reset the stack
-- iterate
-- Properties:
-  - every time a move is applied, either:
-    - board stays the same, so do score and best score
-    - board is moved and exactly one cell appears new, that cell is a 2 or a 4, score moves up, and maybe best score too
-  - when no moves are moving the board observed once, it always remain like this.
-
-
-In other words, the test is a state machine:
-- [the game test's state machine](./tests/derived%20test%20state%20machine.png) that we derived from the game's state machine
+- we instrument our program for a while to record the steps we take till we win a game  
 
 # Implementation
 Nothing special to mention.
