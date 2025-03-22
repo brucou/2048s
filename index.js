@@ -641,8 +641,6 @@ export const events = {
           [lenses.set_best_score, new_best_score],
         ])(app_state);
 
-        console.info(`you won`, history.moves, history.boards);
-
         return [new_app_state, ["RENDER"]];
       }
 
@@ -693,8 +691,6 @@ export const events = {
           [lenses.set_best_score, new_best_score],
         ])(app_state);
 
-        console.info(`you lost`, history.moves, history.boards);
-
         return [new_app_state, ["RENDER"]];
       }
     },
@@ -707,5 +703,4 @@ Object.keys(events.subscriptions).forEach((event_type) => {
 });
 
 // Initialize the app
-console.info(`game with seeds `, first_cells_seed, new_cell_seed);
 events.emitter("INITIALIZE_APP", { first_cells_seed, new_cell_seed });

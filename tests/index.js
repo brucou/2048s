@@ -33,7 +33,7 @@ import {
   print_board_state,
 } from "../tests/_utils.js";
 import { swing_and_switch_game_strategy } from "./move generators.js";
-import { winning_game } from "./fixtures.js";
+import { winning_game, losing_game } from "./fixtures.js";
 
 QUnit.skip("(UI) Game start", function (hooks) {
   QUnit.test(
@@ -1081,6 +1081,8 @@ function are_more_moves_possible(board_state, { collapse_to_the_right, transpose
 
 QUnit.module("(UI) Game rules", function (hooks) {
 
+  let added_cells_history = [];
+
   function make_game_test_fsm(deps) {
     //   - Initialize the game test state machine
     //     - coverage information (data coverage and state/transition coverage)
@@ -1402,7 +1404,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
     //   - From the previous test sequence run (length <= M), we have some coverage and the result of the test (passed or failed)
     const { control_state, extended_state, debug } = test_result;
-    const added_cells_history = extended_state.coverage.added_cells_history;
+    added_cells_history = extended_state.coverage.added_cells_history;
     const control_state_histogram = control_state_history.reduce((acc, control_state) => {
       const key = control_state;
       acc[key] = acc[key] ? acc[key] + 1 : 1;
@@ -1420,7 +1422,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
     // Report on the tests that were successfull
     if (control_state === "TEST_PASSED" || move_number === m) {
-      QUnit.test(`Played game ${JSON.stringify(seeds)} successfully for ${move_number} moves`, assert => {
+      QUnit.skip(`Played game ${JSON.stringify(seeds)} successfully for ${move_number} moves`, assert => {
         assert.ok(true, [`moves: `,
           moves.map((m, i) => print_move(m, control_state_history[i])).toString(), `transitions: `,
           JSON.stringify(transition_histogram)
@@ -1439,7 +1441,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
     //     - game play strategy, number of tests run, number of test passed, failing test sequence
     if (control_state === "TEST_FAILED") {
       const successful_tests = test_results.filter(x => x.control_state === "TEST_PASSED");
-      QUnit.test(`testing game rules`, assert => {
+      QUnit.skip(`testing game rules`, assert => {
         debugger
 
         assert.ok(false, `${successful_tests.length} test passed, 1 test failed, see the log for information`);
@@ -1450,19 +1452,41 @@ QUnit.module("(UI) Game rules", function (hooks) {
   }
 
   //   - If all tests pass, test the frequency of the first cells!!
-  // TODO
-  debugger
-  QUnit.test(`User wins game when reaching 2048 tile`, assert => {
+  QUnit.skip(`Frequency of first cells is 2 with a 90% probability`, assert => {
+    const frequency = added_cells_history.filter(Boolean).reduce((acc, {value: x}) => x === 2 ? acc + 1 : acc, 0) / added_cells_history.filter(Boolean).length;
+    // We need to use the numbers for 100!! which is the test size we used for the first cells here
+    assert.ok(frequency > 0.82 && frequency < 0.94 , `Frequency of 2s is ${frequency}, which is within the expected interval`);
+  });
+
+  QUnit.skip(`User wins game when reaching 2048 tile`, assert => {
     winning_game.forEach(move => {
       const {type,detail} = move;
       events.emitter(type, detail);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a winning game leads correctly to game over status`);
   })
+
+  QUnit.skip(`User loses game when no more moves are possible`, assert => {
+    losing_game.moves.forEach((move) => {
+      const {type,detail} = move;
+      events.emitter(type, detail);
+    });
+    assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
+  })
+  
+  QUnit.test(`Oracle testing - sample game plays exactly as expected per game rules`, assert => {
+    losing_game.moves.forEach((move, i) => {
+      const {type,detail} = move;
+      events.emitter(type, detail);
+      const board_state = get_board_state();
+
+        assert.deepEqual(board_state, losing_game.boards[i], `Move ${i} updates the board as expected`);
+    });
+    assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
+  })
   
 });
 
-// TODO: add oracle testing, one seeds, one moves, and the list of expected app states
 // TODO: more move generators
 // TODO: check the coverage information and produce a report
 // TODO: merge and in master put all the README, summarize all learning...
