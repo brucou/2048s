@@ -32,7 +32,7 @@ import {
   print_move,
   print_board_state,
 } from "../tests/_utils.js";
-import { swing_and_switch_game_strategy } from "./move generators.js";
+import { swing_and_switch_game_strategy, random_game_strategy } from "./move generators.js";
 import { winning_game, losing_game } from "./fixtures.js";
 
 QUnit.skip("(UI) Game start", function (hooks) {
@@ -1464,7 +1464,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
       events.emitter(type, detail);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a winning game leads correctly to game over status`);
-  })
+  });
 
   QUnit.skip(`User loses game when no more moves are possible`, assert => {
     losing_game.moves.forEach((move) => {
@@ -1472,7 +1472,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
       events.emitter(type, detail);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
-  })
+  });
   
   QUnit.test(`Oracle testing - sample game plays exactly as expected per game rules`, assert => {
     losing_game.moves.forEach((move, i) => {
@@ -1487,7 +1487,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
   
 });
 
-// TODO: more move generators
+// TODO: random move generators
 // TODO: check the coverage information and produce a report
 // TODO: merge and in master put all the README, summarize all learning...
 

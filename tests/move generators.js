@@ -1,5 +1,14 @@
 import { empty_object, are_boards_deep_equal } from "./_utils.js";
 
+export function random_game_strategy({START_NEW_GAME, LEFT, RIGHT, UP, DOWN}) {
+  
+
+  return function get_next_move() {
+    const moves = ["LEFT", "RIGHT", "UP", "DOWN"];
+    return { type: "COLLAPSE", detail: moves[Math.floor(Math.random() * 4)] }
+  }
+}
+
 export   function swing_and_switch_game_strategy() {
     let control_state = "START_NEW_GAME";
     let extended_state = empty_object;
