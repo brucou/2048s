@@ -313,16 +313,16 @@ export function render(app_state, event_payload) {
 
     // Swipe keys
     document.addEventListener("keydown", (event) => {
-      if (event.key === "k") {
+      if (event.key.toUpperCase() === "K") {
         emitter("COLLAPSE", "RIGHT");
       }
-      if (event.key === "h") {
+      if (event.key.toUpperCase === "H") {
         emitter("COLLAPSE", "LEFT");
       }
-      if (event.key === "n") {
+      if (event.key.toUpperCase === "N") {
         emitter("COLLAPSE", "DOWN");
       }
-      if (event.key === "u") {
+      if (event.key.toUpperCase === "U") {
         emitter("COLLAPSE", "TOP");
       }
     });

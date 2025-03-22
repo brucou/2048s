@@ -35,21 +35,32 @@ See [the game's state machine](./tests/Game%20state%20machine.png).
 
 # Approach
 - Implementation
-  - new pieces of state
-    - game_status: in progress, or over, or not started (reactively computed from the board state and the "new game" button click)
+We are mainly going to implement tests in this phase and fix the failing ones if any. Summary of last step:
+- we made state machines for the game testing
+- we have one game move generator (swing and switch play strategy)
+- those tests pass, but we are still lacking coverage:
 
-- Design:
-  - randomness:
-    - the empty cells are indexed, a random number is generated (with an independent seeded generator)
-  - new cell:
-    - the cell whose index is the random number modulo the number of empty cells is picked
-  - can_still_move:
-    - compute the board after all four swipes. If none of the four boards has at least one 0 (empty cell), then false else true
+![](./tests/coverage%20swing%20and%20switch.png)
 
-- Game rules for collapsing
-> Tiles slide as far as possible in the chosen direction until they are stopped by either another tile or the edge of the grid. If two tiles of the same number collide while moving, they will merge into a tile with the total value of the two tiles that collided.[7][8] The resulting tile cannot merge with another tile again in the same move. Higher-scoring tiles emit a soft glow;[5] the largest possible tile is 131,072.[9]
->
-> If a move causes three consecutive tiles of the same value to slide together, only the two tiles farthest along the direction of motion will combine. If all four spaces in a row or column are filled with tiles of the same value, a move parallel to that row/column will combine the first two and last two.[10] 
+Assuming our testing state machine is correct, the previous illustration showcases the coverage of the game state machine that we obtained from the previous tests. In blue are the game paths that our swing and switch plays have taken. Thickness indicates how many times the generated game play took that game path. This shows clearly that:
+
+- we haven't test the restarting of a game
+- we haven't test the game end condition which is when the user actually wins the game
+
+This is one value of using state machines for both game modelization and game tests. It helps us litterally see where remaining bugs could hide and a path to chase them.
+
+All this was transition coverage. A state machine is state and transitions, but also data. Regarding data coverage, our swing and switch strategy:
+- did not allow us to test the best score computation in the case when the best score comes from a previous game
+- did not allow us to test that 2048 ends the game and there is no game with a higher value than that
+- we did test that new cells are 2 or 4 and only one new cell (if any) appear after a move
+
+In the light of this, the swirl and switch is not likely to help us get more state/transition coverage. It will increase our data coverage (we may get longer game plays) but not in significant ways:
+- to test user wins, we have no other choice than to well, win a game for a given seed, and test back the moves that were executed to win
+- to increase data coverage for best score, we can just run a game, then simulate a new game click, then run another game. We can do that by taking two sequence of plays from the swing and switch strategy and intercalating a new creation in between.
+
+So, we decide against writing the swirl and switch game play generator -- though it would have been fun to see it run. 
+
+The last strategy is to generate moves randomly, so at any point of time, the next move could be any of the registered moves for the application. This, done with enough repetition, would allow us to test the paths from our illustration that are not in blue (with the exception of a user wins which is unlikely enough to not come up by chance).
 
 - Tests:
   - We generate N random game plays. For each, we choose a M random number of moves, then a random move for each turn, then apply that.
