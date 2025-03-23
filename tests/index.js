@@ -1,4 +1,4 @@
-import { GAME_IN_PROGRESS, GAME_OVER } from "../constants.js";
+import { GAME_IN_PROGRESS, GAME_NOT_STARTED, GAME_OVER } from "../constants.js";
 import {
   get_seeded_random_generator,
   get_starting_cells,
@@ -1082,6 +1082,8 @@ function are_more_moves_possible(board_state, { collapse_to_the_right, transpose
 QUnit.module("(UI) Game rules", function (hooks) {
 
   let added_cells_history = [];
+  let control_state_histograms = [];
+  let transition_histograms = [];
 
   function make_game_test_fsm(deps) {
     //   - Initialize the game test state machine
@@ -1339,128 +1341,156 @@ QUnit.module("(UI) Game rules", function (hooks) {
   }
 
   // For each of the three game play strategies (random, twirl-and-switch, swing-and-switch, cf. excalidraw):
-  const game_play_strategies = [swing_and_switch_game_strategy];
-  const game_play_strategy = game_play_strategies[0];
+  const game_play_strategies_descriptor = ["swing_and_switch_game_strategy", "random_game_strategy"];
+  const game_play_strategies = [swing_and_switch_game_strategy, random_game_strategy];
+  game_play_strategies.forEach((game_play_strategy, i) => {
+    // - pick a random number of tests to perform. Call that N. Must be high enough to test the frequency of 2 and 4s
+    const size = 100;
 
-  // - pick a random number of tests to perform. Call that N. Must be high enough to test the frequency of 2 and 4s
-  const size = 100;
+    // - pick the max size of the game play sequence (around 10 x the game state machine size = 50?). Call that M_max
+    const M_max = 50;
 
-  // - pick the max size of the game play sequence (around 10 x the game state machine size = 50?). Call that M_max
-  const M_max = 50;
+    // - Iterate N times:
+    for (let test_number = 0; test_number < size; test_number++) {
+      const move_generator = game_play_strategy();
 
-  // - Iterate N times:
-  for (let test_number = 0; test_number < size; test_number++) {
-    const move_generator = game_play_strategy();
+      //   - pick a M <= M_max, size of the game play sequence to test against
+      const m = 100;
 
-    //   - pick a M <= M_max, size of the game play sequence to test against
-    const m = 100;
+      const seeds = {
+        // Using a deterministic seed so tests can be rerun and debugged in case of failure
+        first_cells_seed: JSON.stringify(Math.pow(test_number, 2) % 57),
+        new_cell_seed: JSON.stringify(test_number - 1),
 
-    const seeds = {
-      // Using a deterministic seed so tests can be rerun and debugged in case of failure
-      first_cells_seed: JSON.stringify(Math.pow(test_number, 2) % 57),
-      new_cell_seed: JSON.stringify(test_number - 1),
+        // That was the non-deterministic option that we discarded
+        // first_cells_seed: get_uuid(),
+        // new_cell_seed: get_uuid(),
+      };
+      const game_test_fsm = make_game_test_fsm({
+        collapse_to_the_right, transpose, parameters: { seeds }
+      });
 
-      // That was the non-deterministic option that we discarded
-      // first_cells_seed: get_uuid(),
-      // new_cell_seed: get_uuid(),
-    };
-    const game_test_fsm = make_game_test_fsm({
-      collapse_to_the_right, transpose, parameters: { seeds }
-    });
+      // Initialize the app
+      events.emitter("INITIALIZE_APP", seeds);
 
-    // Initialize the app
-    events.emitter("INITIALIZE_APP", seeds);
+      let test_results = [];
+      let moves = [];
+      let app_state_history = [];
+      let control_state_history = [];
+      let test_result = void 0;
+      let move_number = 0;
 
-    let test_results = [];
-    let moves = [];
-    let app_state_history = [];
-    let control_state_history = [];
-    let test_result = void 0;
-    let move_number = 0;
+      //   - Iterate M times:
+      for (move_number = 0; move_number < m; move_number++) {
+        //     - get a move from the move generator associated to the game play strategy under test
+        //       - the move generator is a function that takes the game's board state and the game status
+        //       - and returns a non-trivial game move or EOF (meaning the absence of move)
+        //     - run that move through the game test state machine
+        const next_move = move_generator({ board_state: get_board_state(), game_status: get_game_status() });
+        moves.push(next_move);
+        test_result = game_test_fsm(next_move);
+        test_results = test_results.concat(test_result);
+        app_state_history.push(get_app_state_from_UI());
+        const { control_state, extended_state, debug } = test_result;
+        control_state_history.push(control_state);
 
-    //   - Iterate M times:
-    for (move_number = 0; move_number < m; move_number++) {
-      //     - get a move from the move generator associated to the game play strategy under test
-      //       - the move generator is a function that takes the game's board state and the game status
-      //       - and returns a non-trivial game move or EOF (meaning the absence of move)
-      //     - run that move through the game test state machine
-      const next_move = move_generator({ board_state: get_board_state(), game_status: get_game_status() });
-      moves.push(next_move);
-      test_result = game_test_fsm(next_move);
-      test_results = test_results.concat(test_result);
-      app_state_history.push(get_app_state_from_UI());
+        //     - the game test state machine returns its control state and the updated coverage resulting for running the test input
+        //     - if the control state is "TEST_PASSED", break out of the Mx iteration, return the final coverage and TEST_PASSED
+        if (control_state === "TEST_PASSED") break;
+
+        //     - if the control state is "TEST_FAILED", break out of the Mx iteration, return the final coverage and TEST_FAILED
+        if (control_state === "TEST_FAILED") break;
+
+        //     - if not, the control state is "TEST_IN_PROGRESS.<substate>" and the iteration continues with the next move
+      }
+
+      //   - From the previous test sequence run (length <= M), we have some coverage and the result of the test (passed or failed)
       const { control_state, extended_state, debug } = test_result;
-      control_state_history.push(control_state);
+      added_cells_history = extended_state.coverage.added_cells_history;
+      const control_state_histogram = control_state_history.reduce((acc, control_state) => {
+        const key = control_state;
+        acc[key] = acc[key] ? acc[key] + 1 : 1;
 
-      //     - the game test state machine returns its control state and the updated coverage resulting for running the test input
-      //     - if the control state is "TEST_PASSED", break out of the Mx iteration, return the final coverage and TEST_PASSED
-      if (control_state === "TEST_PASSED") break;
+        return acc;
+      }, {GAME_NOT_STARTED: 1});
+      const transition_histogram = control_state_history.reduce((acc, control_state, i) => {
+        const key = `${control_state_history[i - 1] || "GAME_NOT_STARTED"} -> ${control_state}`;
+        acc[key] = acc[key] ? acc[key] + 1 : 1;
 
-      //     - if the control state is "TEST_FAILED", break out of the Mx iteration, return the final coverage and TEST_FAILED
-      if (control_state === "TEST_FAILED") break;
+        return acc;
+      }, {});
+      control_state_histograms.push(control_state_histogram);
+      transition_histograms.push(transition_histogram);
 
-      //     - if not, the control state is "TEST_IN_PROGRESS.<substate>" and the iteration continues with the next move
-    }
+      // Report on the tests that were successfull
+      if (control_state === "TEST_PASSED" || move_number === m) {
+        QUnit.test(`Played game ${JSON.stringify(seeds)} successfully for ${move_number} moves`, assert => {
+          assert.ok(true, [`moves: `,
+            moves.map((m, i) => print_move(m, control_state_history[i])).toString(), `transitions: `,
+            JSON.stringify(transition_histogram)
+          ].join("\n")
+          );
+          console.info(`Summary coverage statistics ${game_play_strategies_descriptor[i]}`, control_state_histogram, transition_histogram)
+          console.info(`Test summary:`, moves.map((move, i) => ({
+            move: print_move(move, control_state_history[i]),
+            board_state: print_board_state(lenses.get_board_state(app_state_history[i])),
+            score: lenses.get_current_score(app_state_history[i]),
+            best_score: lenses.get_best_score(app_state_history[i]),
+          })))
+        });
 
-    //   - From the previous test sequence run (length <= M), we have some coverage and the result of the test (passed or failed)
-    const { control_state, extended_state, debug } = test_result;
-    added_cells_history = extended_state.coverage.added_cells_history;
-    const control_state_histogram = control_state_history.reduce((acc, control_state) => {
-      const key = control_state;
-      acc[key] = acc[key] ? acc[key] + 1 : 1;
-
-      return acc;
-    }, {});
-    const transition_histogram = control_state_history.reduce((acc, control_state, i) => {
-      const key = `${control_state_history[i - 1] || ":"} -> ${control_state}`;
-      acc[key] = acc[key] ? acc[key] + 1 : 1;
-
-      return acc;
-    }, {});
-
-
-
-    // Report on the tests that were successfull
-    if (control_state === "TEST_PASSED" || move_number === m) {
-      QUnit.skip(`Played game ${JSON.stringify(seeds)} successfully for ${move_number} moves`, assert => {
-        assert.ok(true, [`moves: `,
-          moves.map((m, i) => print_move(m, control_state_history[i])).toString(), `transitions: `,
-          JSON.stringify(transition_histogram)
-        ].join("\n")
-        );
-        console.info("Summary coverage statistics", control_state_histogram, transition_histogram)
-        console.info(`Test summary:`, moves.map((move, i) => ({
-          move: print_move(move, control_state_history[i]),
-          board_state: print_board_state(lenses.get_board_state(app_state_history[i])),
-          score: lenses.get_current_score(app_state_history[i]),
-          best_score: lenses.get_best_score(app_state_history[i]),
-        })))
-      });
-    }
-    //   - If the last test was failed, then stop entirely the testing and produce a test report with:
-    //     - game play strategy, number of tests run, number of test passed, failing test sequence
-    if (control_state === "TEST_FAILED") {
-      const successful_tests = test_results.filter(x => x.control_state === "TEST_PASSED");
-      QUnit.skip(`testing game rules`, assert => {
+        //   - If all tests pass, test the frequency of the first cells (assuming enough data)!!
+        const sample_size = added_cells_history.filter(Boolean).length;
+        if (sample_size > 100) {
+          QUnit.test(`Frequency of first cells is 2 with a 90% probability`, assert => {
+            const frequency = added_cells_history.filter(Boolean).reduce((acc, { value: x }) => x === 2 ? acc + 1 : acc, 0) / sample_size;
+            // We need to use the numbers for 100!! which is the test size we used for the first cells here
+            assert.ok(frequency > 0.82 && frequency < 0.94, `Frequency of 2s is ${frequency}, which is within the expected interval`);
+          });
+        }
+      }
+      //   - If the last test was failed, then stop entirely the testing and produce a test report with:
+      //     - game play strategy, number of tests run, number of test passed, failing test sequence
+      if (control_state === "TEST_FAILED") {
         debugger
+        const successful_tests = test_results.filter(x => x.control_state === "TEST_PASSED");
+        QUnit.test(`testing game rules`, assert => {
+          assert.ok(false, `${successful_tests.length} test passed, 1 test failed, see the log for information`);
+          console.error(extended_state, debug);
+        });
 
-        assert.ok(false, `${successful_tests.length} test passed, 1 test failed, see the log for information`);
-        console.error(extended_state, debug);
+      }
+    }
+
+    // Merge the control state and transition histograms
+    const merged_control_state_histogram = control_state_histograms.reduce((acc, histogram) => {
+      Object.keys(histogram).forEach(key => {
+        acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
       });
 
-    }
-  }
+      return acc;
+    }, {});
+    const merged_transition_histogram = transition_histograms.reduce((acc, histogram) => {
+      Object.keys(histogram).forEach(key => {
+        acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
+      });
 
-  //   - If all tests pass, test the frequency of the first cells!!
-  QUnit.skip(`Frequency of first cells is 2 with a 90% probability`, assert => {
-    const frequency = added_cells_history.filter(Boolean).reduce((acc, {value: x}) => x === 2 ? acc + 1 : acc, 0) / added_cells_history.filter(Boolean).length;
-    // We need to use the numbers for 100!! which is the test size we used for the first cells here
-    assert.ok(frequency > 0.82 && frequency < 0.94 , `Frequency of 2s is ${frequency}, which is within the expected interval`);
-  });
+      return acc;
+    }, {});
+
+    // Report on coverage for game play strategy
+    QUnit.test(`Coverage for ${game_play_strategies_descriptor[i]} is as follows:`, assert => {
+      debugger
+      assert.ok(true, `Control state coverage: ${JSON.stringify(merged_control_state_histogram)} `);
+      assert.ok(true, `Transition coverage: ${JSON.stringify(merged_transition_histogram)}`);
+    })
+  })
+
+
 
   QUnit.skip(`User wins game when reaching 2048 tile`, assert => {
     winning_game.forEach(move => {
-      const {type,detail} = move;
+      const { type, detail } = move;
       events.emitter(type, detail);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a winning game leads correctly to game over status`);
@@ -1468,23 +1498,23 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
   QUnit.skip(`User loses game when no more moves are possible`, assert => {
     losing_game.moves.forEach((move) => {
-      const {type,detail} = move;
+      const { type, detail } = move;
       events.emitter(type, detail);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
   });
-  
+
   QUnit.test(`Oracle testing - sample game plays exactly as expected per game rules`, assert => {
     losing_game.moves.forEach((move, i) => {
-      const {type,detail} = move;
+      const { type, detail } = move;
       events.emitter(type, detail);
       const board_state = get_board_state();
 
-        assert.deepEqual(board_state, losing_game.boards[i], `Move ${i} updates the board as expected`);
+      assert.deepEqual(board_state, losing_game.boards[i], `Move ${i} updates the board as expected`);
     });
     assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
-  })
-  
+  });
+
 });
 
 // TODO: random move generators

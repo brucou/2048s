@@ -265,10 +265,9 @@ export function start_new_game(app_state) {
   const new_app_state = compose_lenses_setters([
     [lenses.set_generators, lenses.get_generators(app_state)],
     [lenses.set_board_state, board_state],
-    [lenses.set_best_score, 0],
     [lenses.set_current_score, 0],
     [lenses.set_game_status, GAME_IN_PROGRESS],
-  ])(INIT_APP_STATE);
+  ])(app_state);
 
   return [new_app_state, ["RENDER"]];
 }
@@ -289,6 +288,21 @@ export function get_ui_elements() {
 }
 
 export let elements;
+
+function keydown_event_listener(event){
+    if (event.key.toUpperCase() === "K") {
+      events.emitter("COLLAPSE", "RIGHT");
+    }
+    if (event.key.toUpperCase() === "H") {
+      events.emitter("COLLAPSE", "LEFT");
+    }
+    if (event.key.toUpperCase() === "N") {
+      events.emitter("COLLAPSE", "DOWN");
+    }
+    if (event.key.toUpperCase() === "U") {
+      events.emitter("COLLAPSE", "TOP");
+    }
+}
 
 export function render(app_state, event_payload) {
   const { init } = event_payload || {};
@@ -311,20 +325,7 @@ export function render(app_state, event_payload) {
     );
 
     // Swipe keys
-    document.addEventListener("keydown", (event) => {
-      if (event.key.toUpperCase() === "K") {
-        events.emitter("COLLAPSE", "RIGHT");
-      }
-      if (event.key.toUpperCase() === "H") {
-        events.emitter("COLLAPSE", "LEFT");
-      }
-      if (event.key.toUpperCase() === "N") {
-        events.emitter("COLLAPSE", "DOWN");
-      }
-      if (event.key.toUpperCase() === "U") {
-        events.emitter("COLLAPSE", "TOP");
-      }
-    });
+    document.addEventListener("keydown", keydown_event_listener );
 
     // Swipe right mouse down + right drag
     {
