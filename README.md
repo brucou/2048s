@@ -31,8 +31,6 @@ Let's see how far we can go.
 
 See [the game's state machine](./tests/Game%20state%20machine.png).
 
-  ## ADR:
-
 # Approach
 - Implementation
 We are mainly going to implement tests in this phase and fix the failing ones if any. Summary of last step:
@@ -65,7 +63,7 @@ The last strategy is to generate moves randomly, so at any point of time, the ne
 Lastly, we are going to test the 2048 winning condition with a sample game with a known seed that we have played and win. In summary:
 
 - we implement the random move generator
-![State machine for random move generator](./tests/state%20machine%20for%20random%20move%20generator.png)
+![State machine for random move generator](./tests/random%20game%20generator.png)
 
 - we instrument our program for a while to record the steps we take till we win a game  
 
@@ -75,9 +73,6 @@ Nothing special to mention.
 ## Rendering
 
 # Tests
-A lot of our UI tests are now failing. Moving the board in one direction now adds a number so deep equal comparison are going to fail. We thus need a comparison that is true with the predicted board except exactly one cell! Hence now, we are going to be comparing boards directly, not just rows. We changed the requirements by refining it further, so we have to refine the tests too. Lesson learnt: put the full requirement from the beginning. That is, specify all what should happen in response to a user event. Or accept the downside when there is enough benefit in implementing a smaller portion of the requirement first.
-
-We'll remove the failing tests. They are now redundant, now that we will test the entire game, not just the first play. While those tests reached the end of their life, they were still useful to give us confidence for the intermediate implementation steps we took. Still on the fence whether in total, the benefit is positive or not.
 
 ## UI testing
 
@@ -85,8 +80,12 @@ We'll remove the failing tests. They are now redundant, now that we will test th
 
 
 # Screenshots
+- ![Coverage swing and switch strategy](./tests/coverage%20swing%20and%20switch.png)
+- ![Coverage random game strategy combined with swing and switch](./tests/random%20game%20aggregated%20state%20coverage.png)
+- ![Sample test results for random game strategy](./tests/random%20game%20sample%20test%20results.png)
 
 # Room for improvement
+- Refactor the tests so they are more readable. Adding the state machines introduced a lot of code to the test. It is worth isolating, testing separately, and documenting (whether through types or text).
 
 # Lessons learnt
 ## CSS
@@ -95,6 +94,7 @@ We'll remove the failing tests. They are now redundant, now that we will test th
 - types would have helped when handling the coverage display and analysis. As the corresponding code gets long, and as it it written in semi-improvised way, types offer refactoring support. Tests also do, but we are precisely in the test code, and we are not using tests to test our test functions. That's the second learning, when something is too complex, there should be a test that it works as expected. The hope that the code would remain small and easy was wrong. It snowballed into something hard to keep in one's hand days down the road.
 
 ## AI
+- pay special attention to markdown completion of files. It often gets the wrong file...
 
 ## Testing
 - we found a bug: when we start a new game, we were also setting the best score back to 0! Our random game strategy allowed us to find it.
