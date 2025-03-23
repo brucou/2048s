@@ -1518,7 +1518,5 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
 });
 
-// TODO: random move generators
-// TODO: check the coverage information and produce a report
 // TODO: merge and in master put all the README, summarize all learning...
 
