@@ -99,3 +99,5 @@ Nothing special to mention.
 ## Testing
 - we found a bug: when we start a new game, we were also setting the best score back to 0! Our random game strategy allowed us to find it.
 - we still haven't covered all the transitions :-) In particular we don't have test that restart a game once the game is over. Lessons learnt: state machines are great to identify those edge cases
+- refactoring the event detail for INITIALIZE_APP led to refactoring the tests too. Lesson learnt, same as before, test fails so we can catch easily the bug
+- Approx. 6,000 assertions in approx. 6s. Not too bad, but it starts to lag. While it is manually possible to skip some tests and put them back. It could also valuable to reduce the amount of tests.

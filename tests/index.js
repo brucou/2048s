@@ -35,11 +35,11 @@ import {
 import { swing_and_switch_game_strategy, random_game_strategy } from "./move generators.js";
 import { winning_game, losing_game } from "./fixtures.js";
 
-QUnit.skip("(UI) Game start", function (hooks) {
+QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User navigates to the game page and sees the initial screen",
     function (assert) {
-      events.emitter("INITIALIZE_APP", { detail: void 0 });
+      events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
 
       const board_state = get_board_state();
       const current_score = get_current_score();
@@ -65,7 +65,7 @@ QUnit.skip("(UI) Game start", function (hooks) {
   QUnit.test(
     "User clicks on the new game button and the game starts, with two distint cells on the board, and a zero score",
     function (assert) {
-      events.emitter("INITIALIZE_APP", { detail: void 0 });
+      events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
       events.emitter("START_NEW_GAME", { detail: void 0 });
 
       const board_state = get_board_state();
@@ -102,7 +102,7 @@ QUnit.skip("(UI) Game start", function (hooks) {
   );
 });
 
-QUnit.skip("Random number generation", function (hooks) {
+QUnit.module("Random number generation", function (hooks) {
   QUnit.test(
     "Random generator generate same numbers for same seed",
     function (assert) {
@@ -261,7 +261,7 @@ QUnit.skip("Random number generation", function (hooks) {
   );
 });
 
-QUnit.skip("Collapse a row to the right", function (hooks) {
+QUnit.module("Collapse a row to the right", function (hooks) {
   const sample_size = 10;
   const oracle_tests = `
 
@@ -445,7 +445,7 @@ QUnit.skip("Collapse a row to the right", function (hooks) {
     }
   );
 
-  QUnit.skip(
+  QUnit.module(
     "Oracle testing (swipe right and score points)",
     function (hooks) {
       test_results.forEach(
@@ -483,7 +483,7 @@ QUnit.skip("Collapse a row to the right", function (hooks) {
     }
   );
 
-  QUnit.skip("Property-based testing", function (hooks) {
+  QUnit.module("Property-based testing", function (hooks) {
     // 1. besides the zero array, every output has 0s only on the left side or has no zero at all (compactness property)
     // 2. the sum of the array in the input matches the sum in the output (invariance property)
     // 3. If non-zero numbers in the input are powers of 2, all non-zero numbers of the output are powers of 2
@@ -681,13 +681,13 @@ QUnit.skip("Collapse a row to the right", function (hooks) {
     );
   });
 
-  QUnit.skip("(UI) Swipe updates the board", function (hooks) {
+  QUnit.module("(UI) Swipe updates the board", function (hooks) {
     const sample_size = 100;
 
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const best_score_before = get_best_score();
@@ -716,7 +716,7 @@ QUnit.skip("Collapse a row to the right", function (hooks) {
   });
 });
 
-QUnit.skip("Collapse a row to the left", function (hooks) {
+QUnit.module("Collapse a row to the left", function (hooks) {
   const sample_size = 10;
   const oracle_tests = `
     # all letters non-zero and different
@@ -943,7 +943,7 @@ QUnit.skip("Collapse a row to the left", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const best_score_before = get_best_score();
@@ -972,7 +972,7 @@ QUnit.skip("Collapse a row to the left", function (hooks) {
   });
 });
 
-QUnit.skip("Collapse a row to the bottom", function (hooks) {
+QUnit.module("Collapse a row to the bottom", function (hooks) {
   const sample_size = 10;
 
   QUnit.module("(UI) Swipe updates the board", function (hooks) {
@@ -981,7 +981,7 @@ QUnit.skip("Collapse a row to the bottom", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const transposed_board_state_before = transpose(board_state_before);
@@ -1013,7 +1013,7 @@ QUnit.skip("Collapse a row to the bottom", function (hooks) {
   });
 });
 
-QUnit.skip("Collapse a row to the top", function (hooks) {
+QUnit.module("Collapse a row to the top", function (hooks) {
   const sample_size = 10;
 
   QUnit.module("(UI) Swipe updates the board", function (hooks) {
@@ -1022,7 +1022,7 @@ QUnit.skip("Collapse a row to the top", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { detail: void 0 });
+        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const transposed_board_state_before = transpose(board_state_before);
@@ -1355,7 +1355,8 @@ QUnit.module("(UI) Game rules", function (hooks) {
       const move_generator = game_play_strategy();
 
       //   - pick a M <= M_max, size of the game play sequence to test against
-      const m = 100;
+      // const m = 100;
+      const m = 80; // reducing the size of the play sequence so tests run faster
 
       const seeds = {
         // Using a deterministic seed so tests can be rerun and debugged in case of failure
@@ -1488,7 +1489,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
 
 
-  QUnit.skip(`User wins game when reaching 2048 tile`, assert => {
+  QUnit.test(`User wins game when reaching 2048 tile`, assert => {
     winning_game.forEach(move => {
       const { type, detail } = move;
       events.emitter(type, detail);
@@ -1496,7 +1497,7 @@ QUnit.module("(UI) Game rules", function (hooks) {
     assert.ok(get_game_status() === GAME_OVER, `Playing a winning game leads correctly to game over status`);
   });
 
-  QUnit.skip(`User loses game when no more moves are possible`, assert => {
+  QUnit.test(`User loses game when no more moves are possible`, assert => {
     losing_game.moves.forEach((move) => {
       const { type, detail } = move;
       events.emitter(type, detail);
