@@ -83,14 +83,17 @@ Nothing special to mention.
 
 # Screenshots
 - Coverage swing and switch strategy:
-  ![Coverage swing and switch strategy](./tests/coverage%20swing%20and%20switch.png)
+
+![Coverage swing and switch strategy](./tests/coverage%20swing%20and%20switch.png)
 
 
 - Coverage random game strategy combined with swing and switch:
-  ![Coverage random game strategy combined with swing and switch](./tests/random%20game%20aggregated%20state%20coverage.png)
-  
+
+![Coverage random game strategy combined with swing and switch](./tests/random%20game%20aggregated%20state%20coverage.png)
+
 - Sample test results for random game strategy:
-  ![Sample test results for random game strategy](./tests/random%20game%20sample%20test%20results.png)
+
+![Sample test results for random game strategy](./tests/random%20game%20sample%20test%20results.png)
 
 # Room for improvement
 - Refactor the tests so they are more readable. Adding the state machines introduced a lot of code to the test. It is worth isolating, testing separately, and documenting (whether through types or text).
