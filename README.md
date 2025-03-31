@@ -65,7 +65,9 @@ Lastly, we are going to test the 2048 winning condition with a sample game with 
 - we implement the random move generator
 ![State machine for random move generator](./tests/random%20game%20generator.png)
 
-- we instrument our program for a while to record the steps we take till we win a game  
+- we find a loosing game
+- we find a winning game
+- we make a game that ends and then start another game to finalize our transition coverage
 
 # Implementation
 Nothing special to mention.
@@ -80,9 +82,15 @@ Nothing special to mention.
 
 
 # Screenshots
-- ![Coverage swing and switch strategy](./tests/coverage%20swing%20and%20switch.png)
-- ![Coverage random game strategy combined with swing and switch](./tests/random%20game%20aggregated%20state%20coverage.png)
-- ![Sample test results for random game strategy](./tests/random%20game%20sample%20test%20results.png)
+- Coverage swing and switch strategy:
+  ![Coverage swing and switch strategy](./tests/coverage%20swing%20and%20switch.png)
+
+
+- Coverage random game strategy combined with swing and switch:
+  ![Coverage random game strategy combined with swing and switch](./tests/random%20game%20aggregated%20state%20coverage.png)
+  
+- Sample test results for random game strategy:
+  ![Sample test results for random game strategy](./tests/random%20game%20sample%20test%20results.png)
 
 # Room for improvement
 - Refactor the tests so they are more readable. Adding the state machines introduced a lot of code to the test. It is worth isolating, testing separately, and documenting (whether through types or text).

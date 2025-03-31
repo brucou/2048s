@@ -32,14 +32,20 @@ import {
   print_move,
   print_board_state,
 } from "../tests/_utils.js";
-import { swing_and_switch_game_strategy, random_game_strategy } from "./move generators.js";
+import {
+  swing_and_switch_game_strategy,
+  random_game_strategy,
+} from "./move generators.js";
 import { winning_game, losing_game } from "./fixtures.js";
 
 QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User navigates to the game page and sees the initial screen",
     function (assert) {
-      events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+      events.emitter("INITIALIZE_APP", {
+        first_cells_seed: "some",
+        new_cell_seed: "seed",
+      });
 
       const board_state = get_board_state();
       const current_score = get_current_score();
@@ -65,7 +71,10 @@ QUnit.module("(UI) Game start", function (hooks) {
   QUnit.test(
     "User clicks on the new game button and the game starts, with two distint cells on the board, and a zero score",
     function (assert) {
-      events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+      events.emitter("INITIALIZE_APP", {
+        first_cells_seed: "some",
+        new_cell_seed: "seed",
+      });
       events.emitter("START_NEW_GAME", { detail: void 0 });
 
       const board_state = get_board_state();
@@ -166,12 +175,12 @@ QUnit.module("Random number generation", function (hooks) {
 
       assert.ok(
         frequency_first_cell_4 > 79 / test_size &&
-        frequency_first_cell_4 < 128 / test_size,
+          frequency_first_cell_4 < 128 / test_size,
         "Frequency of 4s is within parameters"
       );
       assert.ok(
         frequency_second_cell_4 > 79 / test_size &&
-        frequency_second_cell_4 < 128 / test_size,
+          frequency_second_cell_4 < 128 / test_size,
         "Frequency of 4s is within parameters"
       );
 
@@ -687,7 +696,10 @@ QUnit.module("Collapse a row to the right", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+        events.emitter("INITIALIZE_APP", {
+          first_cells_seed: "some",
+          new_cell_seed: "seed",
+        });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const best_score_before = get_best_score();
@@ -943,7 +955,10 @@ QUnit.module("Collapse a row to the left", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+        events.emitter("INITIALIZE_APP", {
+          first_cells_seed: "some",
+          new_cell_seed: "seed",
+        });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const best_score_before = get_best_score();
@@ -981,7 +996,10 @@ QUnit.module("Collapse a row to the bottom", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+        events.emitter("INITIALIZE_APP", {
+          first_cells_seed: "some",
+          new_cell_seed: "seed",
+        });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const transposed_board_state_before = transpose(board_state_before);
@@ -1022,7 +1040,10 @@ QUnit.module("Collapse a row to the top", function (hooks) {
     Array(sample_size)
       .fill(0)
       .forEach((_) => {
-        events.emitter("INITIALIZE_APP", { first_cells_seed: "some", new_cell_seed: "seed" });
+        events.emitter("INITIALIZE_APP", {
+          first_cells_seed: "some",
+          new_cell_seed: "seed",
+        });
         events.emitter("START_NEW_GAME", { detail: void 0 });
         const board_state_before = get_board_state();
         const transposed_board_state_before = transpose(board_state_before);
@@ -1055,32 +1076,55 @@ QUnit.module("Collapse a row to the top", function (hooks) {
 
 function play(board_state, detail, { collapse_to_the_right, transpose }) {
   switch (detail) {
-    case "RIGHT": return board_state.map(collapse_to_the_right);
-    case "LEFT": return board_state.map(collapse_to_the_left);
-    case "DOWN": return transpose(transpose(board_state).map(collapse_to_the_right));
-    case "TOP": return transpose(transpose(board_state).map(collapse_to_the_left));
+    case "RIGHT":
+      return board_state.map(collapse_to_the_right);
+    case "LEFT":
+      return board_state.map(collapse_to_the_left);
+    case "DOWN":
+      return transpose(transpose(board_state).map(collapse_to_the_right));
+    case "TOP":
+      return transpose(transpose(board_state).map(collapse_to_the_left));
   }
 
-  throw `Invalid play direction ${detail}`
+  throw `Invalid play direction ${detail}`;
 }
 
 function play_score(board_state, detail) {
   switch (detail) {
-    case "RIGHT": return board_state.map(compute_score_after_collapse).reduce((a, b) => a + b);
-    case "LEFT": return board_state.map(compute_score_after_collapse).reduce((a, b) => a + b);
-    case "DOWN": return transpose(board_state).map(compute_score_after_collapse).reduce((a, b) => a + b);
-    case "TOP": return transpose(board_state).map(compute_score_after_collapse).reduce((a, b) => a + b);
+    case "RIGHT":
+      return board_state
+        .map(compute_score_after_collapse)
+        .reduce((a, b) => a + b);
+    case "LEFT":
+      return board_state
+        .map(compute_score_after_collapse)
+        .reduce((a, b) => a + b);
+    case "DOWN":
+      return transpose(board_state)
+        .map(compute_score_after_collapse)
+        .reduce((a, b) => a + b);
+    case "TOP":
+      return transpose(board_state)
+        .map(compute_score_after_collapse)
+        .reduce((a, b) => a + b);
   }
 
-  throw `Invalid play direction ${detail}`
+  throw `Invalid play direction ${detail}`;
 }
 
-function are_more_moves_possible(board_state, { collapse_to_the_right, transpose }) {
-  return ["RIGHT", "LEFT", "TOP", "DOWN"].every(dir => are_boards_deep_equal(play(board_state, dir, { collapse_to_the_right, transpose }), board_state))
+function are_more_moves_possible(
+  board_state,
+  { collapse_to_the_right, transpose }
+) {
+  return ["RIGHT", "LEFT", "TOP", "DOWN"].every((dir) =>
+    are_boards_deep_equal(
+      play(board_state, dir, { collapse_to_the_right, transpose }),
+      board_state
+    )
+  );
 }
 
 QUnit.module("(UI) Game rules", function (hooks) {
-
   let added_cells_history = [];
   let control_state_histograms = [];
   let transition_histograms = [];
@@ -1095,13 +1139,12 @@ QUnit.module("(UI) Game rules", function (hooks) {
         first_cell: {}, // { value: void 2, x: void 2, y: void 4 },
         second_cell: {}, // { value: void 4, x: void 1, y: void 3  },
         added_cells_history: [],
-        app_state_history: []
-      }
+        app_state_history: [],
+      },
     };
     let extended_state = JSON.parse(JSON.stringify(initial_state));
     const { collapse_to_the_right, transpose, parameters } = deps;
     const { first_cells_seed, new_cell_seed } = parameters.seeds;
-
 
     let control_state = "GAME_NOT_STARTED";
 
@@ -1109,65 +1152,78 @@ QUnit.module("(UI) Game rules", function (hooks) {
 
     return function (next_move) {
       // Get the state before the next move
-      const [app_state, new_app_state] = take_snapshot_before_after(next_move, events.emitter);
+      const [app_state, new_app_state] = take_snapshot_before_after(
+        next_move,
+        events.emitter
+      );
 
       const { type, detail } = next_move;
 
       if (type === "EOF") {
         return {
           control_state: "TEST_PASSED",
-          extended_state
-        }
+          extended_state,
+        };
       }
 
       if (control_state === "GAME_NOT_STARTED") {
         if (type === "START_NEW_GAME") {
           // A new game should be started and the board should have exactly two cells non mepty, score 0, best score as before
           const transition = "GAME_NOT_STARTED -> GAME_IN_PROGRESS";
-          const is_best_score_unchanged = new_app_state.best_score === app_state.best_score;
-          const { is_new_game_app_state, debug } = _is_new_game_app_state(new_app_state);
+          const is_best_score_unchanged =
+            new_app_state.best_score === app_state.best_score;
+          const { is_new_game_app_state, debug } =
+            _is_new_game_app_state(new_app_state);
 
           if (is_new_game_app_state && is_best_score_unchanged) {
-            extended_state.coverage = update_coverage_after_start_new_game(extended_state.coverage, transition, app_state, new_app_state);
+            extended_state.coverage = update_coverage_after_start_new_game(
+              extended_state.coverage,
+              transition,
+              app_state,
+              new_app_state
+            );
             control_state = "GAME_IN_PROGRESS";
 
             return {
               control_state,
               extended_state,
             };
-          }
-          else {
+          } else {
             control_state = "TEST_FAILED";
 
             return {
               control_state,
               extended_state,
-              debug
+              debug,
             };
           }
-        }
-        else {
+        } else {
           // nothing should change in the board
           const transition = "GAME_NOT_STARTED -> GAME_NOT_STARTED";
 
           if (is_deep_equal_app_state(app_state, new_app_state)) {
             control_state = "GAME_NOT_STARTED";
-            extended_state.coverage = update_coverage_after_no_change(extended_state.coverage, transition, app_state, control_state);
+            extended_state.coverage = update_coverage_after_no_change(
+              extended_state.coverage,
+              transition,
+              app_state,
+              control_state
+            );
 
             return {
               control_state,
               extended_state,
             };
-          }
-          else {
+          } else {
             control_state = "TEST_FAILED";
 
             return {
               control_state,
               extended_state,
               debug: {
-                app_state, new_app_state
-              }
+                app_state,
+                new_app_state,
+              },
             };
           }
         }
@@ -1176,30 +1232,50 @@ QUnit.module("(UI) Game rules", function (hooks) {
       if (control_state === "GAME_IN_PROGRESS") {
         if (type === "COLLAPSE") {
           const transition = "GAME_IN_PROGRESS -> GAME_IN_PROGRESS";
-          const { best_score, board_state, current_score, game_status } = app_state;
-          const { best_score: new_best_score, board_state: new_board_state, current_score: new_current_score, game_status: new_game_status } = new_app_state;
+          const { best_score, board_state, current_score, game_status } =
+            app_state;
+          const {
+            best_score: new_best_score,
+            board_state: new_board_state,
+            current_score: new_current_score,
+            game_status: new_game_status,
+          } = new_app_state;
 
           // If the board should not change, nothing should change
-          const board_after_play = play(board_state, detail, { collapse_to_the_right, transpose });
+          const board_after_play = play(board_state, detail, {
+            collapse_to_the_right,
+            transpose,
+          });
           if (are_boards_deep_equal(board_after_play, board_state)) {
             if (is_deep_equal_app_state(app_state, new_app_state)) {
               control_state = "GAME_IN_PROGRESS";
-              extended_state.coverage = update_coverage_after_no_change(extended_state.coverage, transition, app_state, control_state)
+              extended_state.coverage = update_coverage_after_no_change(
+                extended_state.coverage,
+                transition,
+                app_state,
+                control_state
+              );
 
               return {
                 control_state,
                 extended_state,
               };
-            }
-            else {
+            } else {
               control_state = "TEST_FAILED";
 
               return {
                 control_state,
                 extended_state,
                 debug: {
-                  new_board_state, board_state, new_current_score, current_score, new_best_score, best_score, new_game_status, game_status
-                }
+                  new_board_state,
+                  board_state,
+                  new_current_score,
+                  current_score,
+                  new_best_score,
+                  best_score,
+                  new_game_status,
+                  game_status,
+                },
               };
             }
           }
@@ -1207,14 +1283,29 @@ QUnit.module("(UI) Game rules", function (hooks) {
           // If the board should change, check that it changed correctly as per game rules
           else {
             // Get the added cell. There should be one and there should be only one. All others should be same
-            const new_cells = get_added_cell_after_play(board_after_play, new_board_state);
+            const new_cells = get_added_cell_after_play(
+              board_after_play,
+              new_board_state
+            );
             const score_points = play_score(board_state, detail);
-            const is_expected_score = new_current_score === current_score + score_points;
-            const is_expected_best_score = Math.max(current_score + score_points, best_score) === new_best_score;
+            const is_expected_score =
+              new_current_score === current_score + score_points;
+            const is_expected_best_score =
+              Math.max(current_score + score_points, best_score) ===
+              new_best_score;
 
-            if (new_cells.length === 1 && is_expected_cell_value(new_cells) && is_expected_score && is_expected_best_score) {
+            if (
+              new_cells.length === 1 &&
+              is_expected_cell_value(new_cells) &&
+              is_expected_score &&
+              is_expected_best_score
+            ) {
               // We checked that new_board_state is as expected so we can use it to check if the game should be over
-              const should_game_be_over = are_more_moves_possible(new_board_state, { collapse_to_the_right, transpose }) || is_2048(new_board_state);
+              const should_game_be_over =
+                are_more_moves_possible(new_board_state, {
+                  collapse_to_the_right,
+                  transpose,
+                }) || is_2048(new_board_state);
               const is_game_over = new_app_state.game_status === GAME_OVER;
 
               if (should_game_be_over !== is_game_over) {
@@ -1224,33 +1315,46 @@ QUnit.module("(UI) Game rules", function (hooks) {
                   control_state,
                   extended_state,
                   debug: {
-                    app_state, new_app_state, new_cells, is_expected_cell_value: is_expected_cell_value(new_cells), is_expected_score, is_expected_best_score, should_game_be_over, is_game_over
-                  }
+                    app_state,
+                    new_app_state,
+                    new_cells,
+                    is_expected_cell_value: is_expected_cell_value(new_cells),
+                    is_expected_score,
+                    is_expected_best_score,
+                    should_game_be_over,
+                    is_game_over,
+                  },
                 };
-              }
-              else {
+              } else {
                 control_state = is_game_over ? "GAME_OVER" : "GAME_IN_PROGRESS";
                 const transition = `GAME_IN_PROGRESS -> ${control_state}`;
                 const new_cell = new_cells[0];
 
-                update_coverage_after_collapse_move(extended_state.coverage, transition, new_cell, app_state, new_app_state)
+                update_coverage_after_collapse_move(
+                  extended_state.coverage,
+                  transition,
+                  new_cell,
+                  app_state,
+                  new_app_state
+                );
 
                 return {
                   control_state,
                   extended_state,
                 };
               }
-
-            }
-            else {
+            } else {
               control_state = "TEST_FAILED";
 
               return {
                 control_state,
                 extended_state,
                 debug: {
-                  app_state, new_app_state, new_cells, is_expected_cell_value: is_expected_cell_value(new_cells)
-                }
+                  app_state,
+                  new_app_state,
+                  new_cells,
+                  is_expected_cell_value: is_expected_cell_value(new_cells),
+                },
               };
             }
           }
@@ -1259,90 +1363,112 @@ QUnit.module("(UI) Game rules", function (hooks) {
         if (type === "START_NEW_GAME") {
           // A new game should be started and the board should have exactly two cells non mepty, score 0, best score as before
           const transition = "GAME_IN_PROGRESS -> GAME_IN_PROGRESS";
-          const is_best_score_unchanged = new_app_state.best_score === app_state.best_score;
-          const { is_new_game_app_state, debug } = _is_new_game_app_state(new_app_state);
+          const is_best_score_unchanged =
+            new_app_state.best_score === app_state.best_score;
+          const { is_new_game_app_state, debug } =
+            _is_new_game_app_state(new_app_state);
 
           if (is_new_game_app_state && is_best_score_unchanged) {
-            extended_state.coverage = update_coverage_after_start_new_game(extended_state.coverage, transition, app_state, new_app_state);
+            extended_state.coverage = update_coverage_after_start_new_game(
+              extended_state.coverage,
+              transition,
+              app_state,
+              new_app_state
+            );
             control_state = "GAME_IN_PROGRESS";
 
             return {
               control_state,
               extended_state,
             };
-          }
-          else {
+          } else {
             control_state = "TEST_FAILED";
 
             return {
               control_state,
               extended_state,
-              debug
+              debug,
             };
           }
         }
 
-        throw `unexpected event type received (${type}) while in GAME_IN_PROGRESS state`
+        throw `unexpected event type received (${type}) while in GAME_IN_PROGRESS state`;
       }
 
       if (control_state === "GAME_OVER") {
         if (type === "START_NEW_GAME") {
           // A new game should be started and the board should have exactly two cells non mepty, score 0, best score as before
           const transition = "GAME_OVER -> GAME_IN_PROGRESS";
-          const is_best_score_unchanged = new_app_state.best_score === app_state.best_score;
-          const { is_new_game_app_state, debug } = _is_new_game_app_state(new_app_state);
+          const is_best_score_unchanged =
+            new_app_state.best_score === app_state.best_score;
+          const { is_new_game_app_state, debug } =
+            _is_new_game_app_state(new_app_state);
 
           if (is_new_game_app_state && is_best_score_unchanged) {
-            extended_state.coverage = update_coverage_after_start_new_game(extended_state.coverage, transition, app_state, new_app_state);
+            extended_state.coverage = update_coverage_after_start_new_game(
+              extended_state.coverage,
+              transition,
+              app_state,
+              new_app_state
+            );
             control_state = "GAME_IN_PROGRESS";
 
             return {
               control_state,
               extended_state,
             };
-          }
-          else {
+          } else {
             control_state = "TEST_FAILED";
 
             return {
               control_state,
               extended_state,
-              debug
+              debug,
             };
           }
-        }
-        else {
+        } else {
           // nothing should change in the board
           const transition = "GAME_OVER -> GAME_OVER";
 
           if (is_deep_equal_app_state(app_state, new_app_state)) {
             control_state = "GAME_OVER";
-            extended_state.coverage = update_coverage_after_no_change(extended_state.coverage, transition, app_state, control_state);
+            extended_state.coverage = update_coverage_after_no_change(
+              extended_state.coverage,
+              transition,
+              app_state,
+              control_state
+            );
 
             return {
               control_state,
               extended_state,
             };
-          }
-          else {
+          } else {
             control_state = "TEST_FAILED";
 
             return {
               control_state,
               extended_state,
               debug: {
-                app_state, new_app_state
-              }
+                app_state,
+                new_app_state,
+              },
             };
           }
         }
       }
-    }
+    };
   }
 
   // For each of the three game play strategies (random, twirl-and-switch, swing-and-switch, cf. excalidraw):
-  const game_play_strategies_descriptor = ["swing_and_switch_game_strategy", "random_game_strategy"];
-  const game_play_strategies = [swing_and_switch_game_strategy, random_game_strategy];
+  const game_play_strategies_descriptor = [
+    "swing_and_switch_game_strategy",
+    "random_game_strategy",
+  ];
+  const game_play_strategies = [
+    swing_and_switch_game_strategy,
+    random_game_strategy,
+  ];
   game_play_strategies.forEach((game_play_strategy, i) => {
     // - pick a random number of tests to perform. Call that N. Must be high enough to test the frequency of 2 and 4s
     const size = 100;
@@ -1368,7 +1494,9 @@ QUnit.module("(UI) Game rules", function (hooks) {
         // new_cell_seed: get_uuid(),
       };
       const game_test_fsm = make_game_test_fsm({
-        collapse_to_the_right, transpose, parameters: { seeds }
+        collapse_to_the_right,
+        transpose,
+        parameters: { seeds },
       });
 
       // Initialize the app
@@ -1387,7 +1515,10 @@ QUnit.module("(UI) Game rules", function (hooks) {
         //       - the move generator is a function that takes the game's board state and the game status
         //       - and returns a non-trivial game move or EOF (meaning the absence of move)
         //     - run that move through the game test state machine
-        const next_move = move_generator({ board_state: get_board_state(), game_status: get_game_status() });
+        const next_move = move_generator({
+          board_state: get_board_state(),
+          game_status: get_game_status(),
+        });
         moves.push(next_move);
         test_result = game_test_fsm(next_move);
         test_results = test_results.concat(test_result);
@@ -1408,115 +1539,227 @@ QUnit.module("(UI) Game rules", function (hooks) {
       //   - From the previous test sequence run (length <= M), we have some coverage and the result of the test (passed or failed)
       const { control_state, extended_state, debug } = test_result;
       added_cells_history = extended_state.coverage.added_cells_history;
-      const control_state_histogram = control_state_history.reduce((acc, control_state) => {
-        const key = control_state;
-        acc[key] = acc[key] ? acc[key] + 1 : 1;
+      const control_state_histogram = control_state_history.reduce(
+        (acc, control_state) => {
+          const key = control_state;
+          acc[key] = acc[key] ? acc[key] + 1 : 1;
 
-        return acc;
-      }, {GAME_NOT_STARTED: 1});
-      const transition_histogram = control_state_history.reduce((acc, control_state, i) => {
-        const key = `${control_state_history[i - 1] || "GAME_NOT_STARTED"} -> ${control_state}`;
-        acc[key] = acc[key] ? acc[key] + 1 : 1;
+          return acc;
+        },
+        { GAME_NOT_STARTED: 1 }
+      );
+      const transition_histogram = control_state_history.reduce(
+        (acc, control_state, i) => {
+          const key = `${
+            control_state_history[i - 1] || "GAME_NOT_STARTED"
+          } -> ${control_state}`;
+          acc[key] = acc[key] ? acc[key] + 1 : 1;
 
-        return acc;
-      }, {});
+          return acc;
+        },
+        {}
+      );
       control_state_histograms.push(control_state_histogram);
       transition_histograms.push(transition_histogram);
 
       // Report on the tests that were successfull
       if (control_state === "TEST_PASSED" || move_number === m) {
-        QUnit.test(`Played game ${JSON.stringify(seeds)} successfully for ${move_number} moves`, assert => {
-          assert.ok(true, [`moves: `,
-            moves.map((m, i) => print_move(m, control_state_history[i])).toString(), `transitions: `,
-            JSON.stringify(transition_histogram)
-          ].join("\n")
-          );
-          console.info(`Summary coverage statistics ${game_play_strategies_descriptor[i]}`, control_state_histogram, transition_histogram)
-          console.info(`Test summary:`, moves.map((move, i) => ({
-            move: print_move(move, control_state_history[i]),
-            board_state: print_board_state(lenses.get_board_state(app_state_history[i])),
-            score: lenses.get_current_score(app_state_history[i]),
-            best_score: lenses.get_best_score(app_state_history[i]),
-          })))
-        });
+        QUnit.test(
+          `Played game ${JSON.stringify(
+            seeds
+          )} successfully for ${move_number} moves`,
+          (assert) => {
+            assert.ok(
+              true,
+              [
+                `moves: `,
+                moves
+                  .map((m, i) => print_move(m, control_state_history[i]))
+                  .toString(),
+                `transitions: `,
+                JSON.stringify(transition_histogram),
+              ].join("\n")
+            );
+            console.info(
+              `Summary coverage statistics ${game_play_strategies_descriptor[i]}`,
+              control_state_histogram,
+              transition_histogram
+            );
+            console.info(
+              `Test summary:`,
+              moves.map((move, i) => ({
+                move: print_move(move, control_state_history[i]),
+                board_state: print_board_state(
+                  lenses.get_board_state(app_state_history[i])
+                ),
+                score: lenses.get_current_score(app_state_history[i]),
+                best_score: lenses.get_best_score(app_state_history[i]),
+              }))
+            );
+          }
+        );
 
         //   - If all tests pass, test the frequency of the first cells (assuming enough data)!!
         const sample_size = added_cells_history.filter(Boolean).length;
         if (sample_size > 100) {
-          QUnit.test(`Frequency of first cells is 2 with a 90% probability`, assert => {
-            const frequency = added_cells_history.filter(Boolean).reduce((acc, { value: x }) => x === 2 ? acc + 1 : acc, 0) / sample_size;
-            // We need to use the numbers for 100!! which is the test size we used for the first cells here
-            assert.ok(frequency > 0.82 && frequency < 0.94, `Frequency of 2s is ${frequency}, which is within the expected interval`);
-          });
+          QUnit.test(
+            `Frequency of first cells is 2 with a 90% probability`,
+            (assert) => {
+              const frequency =
+                added_cells_history
+                  .filter(Boolean)
+                  .reduce((acc, { value: x }) => (x === 2 ? acc + 1 : acc), 0) /
+                sample_size;
+              // We need to use the numbers for 100!! which is the test size we used for the first cells here
+              assert.ok(
+                frequency > 0.82 && frequency < 0.94,
+                `Frequency of 2s is ${frequency}, which is within the expected interval`
+              );
+            }
+          );
         }
       }
       //   - If the last test was failed, then stop entirely the testing and produce a test report with:
       //     - game play strategy, number of tests run, number of test passed, failing test sequence
       if (control_state === "TEST_FAILED") {
-        debugger
-        const successful_tests = test_results.filter(x => x.control_state === "TEST_PASSED");
-        QUnit.test(`testing game rules`, assert => {
-          assert.ok(false, `${successful_tests.length} test passed, 1 test failed, see the log for information`);
+        debugger;
+        const successful_tests = test_results.filter(
+          (x) => x.control_state === "TEST_PASSED"
+        );
+        QUnit.test(`testing game rules`, (assert) => {
+          assert.ok(
+            false,
+            `${successful_tests.length} test passed, 1 test failed, see the log for information`
+          );
           console.error(extended_state, debug);
         });
-
       }
     }
 
     // Merge the control state and transition histograms
-    const merged_control_state_histogram = control_state_histograms.reduce((acc, histogram) => {
-      Object.keys(histogram).forEach(key => {
-        acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
-      });
+    const merged_control_state_histogram = control_state_histograms.reduce(
+      (acc, histogram) => {
+        Object.keys(histogram).forEach((key) => {
+          acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
+        });
 
-      return acc;
-    }, {});
-    const merged_transition_histogram = transition_histograms.reduce((acc, histogram) => {
-      Object.keys(histogram).forEach(key => {
-        acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
-      });
+        return acc;
+      },
+      {}
+    );
+    const merged_transition_histogram = transition_histograms.reduce(
+      (acc, histogram) => {
+        Object.keys(histogram).forEach((key) => {
+          acc[key] = acc[key] ? acc[key] + histogram[key] : histogram[key];
+        });
 
-      return acc;
-    }, {});
+        return acc;
+      },
+      {}
+    );
 
     // Report on coverage for game play strategy
-    QUnit.test(`Coverage for ${game_play_strategies_descriptor[i]} is as follows:`, assert => {
-      debugger
-      assert.ok(true, `Control state coverage: ${JSON.stringify(merged_control_state_histogram)} `);
-      assert.ok(true, `Transition coverage: ${JSON.stringify(merged_transition_histogram)}`);
-    })
-  })
+    QUnit.test(
+      `Coverage for ${game_play_strategies_descriptor[i]} is as follows:`,
+      (assert) => {
+        debugger;
+        assert.ok(
+          true,
+          `Control state coverage: ${JSON.stringify(
+            merged_control_state_histogram
+          )} `
+        );
+        assert.ok(
+          true,
+          `Transition coverage: ${JSON.stringify(merged_transition_histogram)}`
+        );
+      }
+    );
+  });
 
-
-
-  QUnit.test(`User wins game when reaching 2048 tile`, assert => {
-    winning_game.forEach(move => {
+  QUnit.test(`User wins game when reaching 2048 tile`, (assert) => {
+    winning_game.forEach((move) => {
       const { type, detail } = move;
       events.emitter(type, detail);
     });
-    assert.ok(get_game_status() === GAME_OVER, `Playing a winning game leads correctly to game over status`);
+    assert.ok(
+      get_game_status() === GAME_OVER,
+      `Playing a winning game leads correctly to game over status`
+    );
   });
 
-  QUnit.test(`User loses game when no more moves are possible`, assert => {
+  QUnit.test(`User loses game when no more moves are possible`, (assert) => {
     losing_game.moves.forEach((move) => {
       const { type, detail } = move;
       events.emitter(type, detail);
     });
-    assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
+    assert.ok(
+      get_game_status() === GAME_OVER,
+      `Playing a losing game leads correctly to game over status`
+    );
   });
 
-  QUnit.test(`Oracle testing - sample game plays exactly as expected per game rules`, assert => {
-    losing_game.moves.forEach((move, i) => {
-      const { type, detail } = move;
-      events.emitter(type, detail);
-      const board_state = get_board_state();
+  QUnit.test(
+    `Oracle testing - sample game plays exactly as expected per game rules`,
+    (assert) => {
+      losing_game.moves.forEach((move, i) => {
+        const { type, detail } = move;
+        events.emitter(type, detail);
+        const board_state = get_board_state();
 
-      assert.deepEqual(board_state, losing_game.boards[i], `Move ${i} updates the board as expected`);
-    });
-    assert.ok(get_game_status() === GAME_OVER, `Playing a losing game leads correctly to game over status`);
-  });
+        assert.deepEqual(
+          board_state,
+          losing_game.boards[i],
+          `Move ${i} updates the board as expected`
+        );
+      });
+      assert.ok(
+        get_game_status() === GAME_OVER,
+        `Playing a losing game leads correctly to game over status`
+      );
+    }
+  );
 
+  QUnit.test(
+    `Oracle testing - User plays a game till then end then starts a new game that he plays till the end`,
+    (assert) => {
+      losing_game.moves.forEach((move, i) => {
+        const { type, detail } = move;
+        events.emitter(type, detail);
+      });
+      const best_score = get_best_score();
+      const current_score = get_current_score();
+
+      // Now restart the game
+      events.emitter("START_NEW_GAME", { detail: void 0 });
+
+      // Check the best score
+      assert.ok(
+        get_best_score() === best_score,
+        `The best score is the one of the past game as expected`
+      );
+
+      // Check the current score is 0
+      assert.ok(
+        get_current_score() === 0,
+        `The score is reset to zero as expected`
+      );
+
+      // Play again
+      losing_game.moves.forEach((move, i) => {
+        const { type, detail } = move;
+        events.emitter(type, detail);
+      });
+
+      // Note that the score could be different because we haven't reset the seeds
+      // so we cant' be comparing scores now and that game may no longer be a losing game!
+      // so the only check we can do here is that nothing blows up :-)
+      assert.ok(
+        true,
+        `User can play a second game by restarting the game`
+      );
+
+    }
+  );
 });
-
 // TODO: merge and in master put all the README, summarize all learning...
-
