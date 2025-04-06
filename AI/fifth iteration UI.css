@@ -1,0 +1,122 @@
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #faf8ef;
+}
+
+.container {
+    background-color: #bbada0;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 500px;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 48px;
+    font-weight: bold;
+    color: #776e65;
+    margin: 0;
+}
+
+.how-to-play-link {
+    color: #776e65;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.score-and-new-game {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.score-container {
+    display: flex;
+    gap: 10px;
+}
+
+.score-box {
+    background-color: #bbada0;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+    width: 100px;
+    text-align: center;
+    background-color: #eee4da;
+}
+
+.score-label {
+    color: #eee4da;
+    font-size: 13px;
+    font-weight: bold;
+    background-color: #bbada0;
+    padding: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    margin-bottom: 0;
+}
+
+.score-value {
+    color: #fff;
+    font-size: 25px;
+    font-weight: bold;
+    background-color: #bbada0;
+    padding: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-top: 0;
+}
+
+.new-game-button {
+    background-color: #8f7a66;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.game-board {
+    background-color: #bbada0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 15px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.grid-cell {
+    background-color: #cdc1b4;
+    border-radius: 5px;
+}
+
+#how-to-play {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.start-playing-link {
+    color: #1e1e1e;
+    text-decoration: underline;
+    display: block;
+    margin-top: 10px;
+}

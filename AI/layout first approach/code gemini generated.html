@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Page Layout</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+        }
+
+        .above_the_board_area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: #f0f0f0;
+            width: calc(4 * 125px + 3 * 12.5px + 40px);
+            box-sizing: border-box;
+            margin-bottom: 0;
+        }
+
+        .left_part {
+            font-weight: bold;
+            color: #776e65;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+
+        .left_part_title {
+            font-size: 4em;
+            margin: 0;
+            border: 0;
+            padding: 0;
+        }
+
+        .left_part_spacer {
+            height: 20px;
+        }
+
+        .left_part_description {
+            font-size: 1.1em;
+            color: #776e65;
+        }
+
+        .left_part_link {
+            font-size: 1em;
+            color: #5695ed;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .right_part {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: right;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .score_box {
+            background-color: #bbada0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.2em;
+            color: white;
+        }
+
+        .score_label {
+            font-size: 0.8em;
+            color: #eee4da;
+        }
+
+        #score_value, #best_value {
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .new_game_button {
+            background-color: #8f7a66;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .new_game_button:hover {
+            background-color: #766251;
+        }
+
+        .board_area {
+            background-color: #f0f0f0;
+            padding: 0;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0;
+            margin-bottom: 0;
+            width: calc(4 * 125px + 3 * 12.5px + 40px);
+            box-sizing: border-box;
+        }
+
+        .game_board {
+            display: grid;
+            grid-template-columns: repeat(4, 125px);
+            grid-template-rows: repeat(4, 125px);
+            gap: 12.5px;
+            background-color: #f0f0f0;
+            padding: 12.5px;
+            border-radius: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+        }
+
+        .game_cell {
+            background-color: #ccc0b3;
+            border-radius: 6.25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            color: #776e65;
+        }
+
+        .below_the_board_area {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: left;
+            font-size: 1.1em;
+            color: #776e65;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: calc(4 * 125px + 3 * 12.5px + 40px);
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 0;
+        }
+
+        .below_the_board_area_text {
+            margin-bottom: 20px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .below_the_board_area_link {
+            color: #5695ed;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="above_the_board_area">
+        <div class="left_part">
+            <div class = "left_part_title">2048</div>
+            <div class="left_part_spacer"></div>
+            <div class="left_part_description">Join the tiles, get to 2048!</div>
+            <div class="left_part_link">How to Play</div>
+        </div>
+        <div class="right_part">
+            <div class="score_box">
+                <div class="score_label">score</div>
+                <div id="score_value">0</div>
+            </div>
+            <div class="score_box">
+                <div class="score_label">best</div>
+                <div id="best_value">0</div>
+            </div>
+            <button class="new_game_button">New Game</button>
+        </div>
+    </div>
+
+    <div class="board_area">
+        <div class="game_board">
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+            <div class="game_cell"></div>
+        </div>
+    </div>
+
+    <div class="below_the_board_area">
+        <div class = "below_the_board_area_text">
+            HOW TO PLAY: Use your arrow keys to move the tiles.
+            Tiles with the same number merge into one when they
+            touch. Add them up to reach 2048!
+        </div>
+        <a href="#" class="below_the_board_area_link">Start Playing</a>
+    </div>
+</body>
+</html>
