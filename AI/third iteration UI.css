@@ -1,0 +1,89 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.container {
+    background-color: #eee4da;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 600px;
+}
+
+header {
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.how-to-play-link {
+    color: #1e1e1e;
+    text-decoration: underline;
+    display: block;
+    margin-bottom: 10px;
+}
+.score-and-new-game{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.score-container {
+    display: flex;
+    gap: 10px;
+}
+
+.score-box {
+    background-color: #bbada0;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+    width: 80px;
+}
+
+.new-game-button {
+    background-color: #8f7a66;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.game-board {
+    background-color: #bbada0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 10px;
+    width: 500px; /* Set the width to make it a square */
+    aspect-ratio: 1/1;
+    margin-bottom: 20px;
+}
+
+.grid-cell {
+    background-color: #cdc1b4;
+    border-radius: 5px;
+}
+
+#how-to-play {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.start-playing-link {
+    color: #1e1e1e;
+    text-decoration: underline;
+    display: block;
+    margin-top: 10px;
+}
