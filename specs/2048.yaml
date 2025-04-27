@@ -87,7 +87,7 @@ render (target element, app state, changed):
     - contains a board area that displays the board state as the game starts or progresses
     - contains a bottom area with some basic instructions
     - Layout: the top area and board area are aligned so the board's right border is the same as the scores section's right border
-    - Illustrative example:
+    - Illustrative example: (tjhis is ASCII but replace with three images of lo-fi model_
 
 ------example start
       2048                              +-----------+
@@ -248,22 +248,44 @@ emit_event (event type, event payload)
 - 
 (cf. https://gemini.google.com/app/7c9289ff7007fab8 good but there isn't a loosing board, just a non-winning board)
 
+Predicates:
+- is_empty(r, c) <- (board_state <- app_state)
+- cell(r,c) <- (board_state <- app_state)
+- is_not_started <- (game_status <- app_state)
+- is_playing <- (game_status <- app_state)
+- is_game_over <- (game_status <- app_state)
+- is_game_won <- (game_status <- app_state)
+- is_game_lost <- (game_status <- app_state)
+- board_is_compacted <- (board_state <- app_state, direction <- SWIPED (direction))
+- num_non_empty <- (board_state <- app_state, direction <- SWIPED (direction))
+- num_non_empty_decreased_or_same_from_prev <- (board_state <- app_state)', (board_state <- app_state)
+- board_changed_from_prev <- (board_state <- app_state)', (board_state <- app_state)
+- board_unchanged_from_prev <- (board_state <- app_state)', (board_state <- app_state)
+- score_unchanged_from_prev <- (current_score <- app_state)', (current_score <- app_state)
+- best_score_unchanged_from_prev <- (best_score <- app_state)', (best_score <- app_state)
+- score_increased_from_prev <- (current_score <- app_state)', (current_score <- app_state)
+- score_not_decreased_from_prev <- (current_score <- app_state)', (current_score <- app_state)
+- has_2048_cell <- (board_state <- app_state)
+- can_move <- (board_state <- app_state)
+- new_game_transition <- (_ <- STARTED_NEW_GAME)
+- sum_of_cells_diff_is_2_or_4 <- (board_state <- app_state)', (board_state <- app_state)
+
 Properties:
 - only_powers_of_2 <- cells on the board are either empty or powers of 2
   - AG (FORALL r, c: (is_empty(r, c) OR (cell(r, c) > 0 AND is_power_of_2(cell(r, c)))))
 - empty_board_before_game_start <- If the game has not started, there are no non-empty cells on the board
-  - AG (is_not_started IMPLIES (FORALL r, c: is_empty(r, c)))
+  - AG (is_not_started => (FORALL r, c: is_empty(r, c)))
 - game_in_progress_has_min_non_empty_cells <- If the game is being played, there are at least two non-empty cells on the board
-  - AG (is_playing IMPLIES (num_non_empty >= 2))
+  - AG (is_playing => (num_non_empty >= 2))
 - player_move_compacts_board <- If the game is being played, and the user made a move in a given direction, there are no empty cells in between non-empty cells in the given direction
-  - AG (is_playing IMPLIES FORALL dir: AX (board_is_compacted(dir)))
+  - AG (is_playing => FORALL dir: AX (board_is_compacted))
 Note: AX quantifies over all possible next states. If the transition system allows non-move transitions from a playing state, this formula would be too strong. Assuming the only transitions from is_playing states are moves in one of the four directions.
 - score_increase_means_changed_board <- If the game is being played, and the user made a move in a given direction, and the score increased, then the board moved and the number of non-empty cells is equal or lower than before the move
   - AG (is_playing IMPLIES FORALL dir: AX (score_increased_from_prev IMPLIES (board_changed_from_prev AND num_non_empty_decreased_or_same_from_prev)))
 - unchanged_board_means_unchanged_score <- If the game is being played, and the user made a move in a given direction, and the board after the move is the same as before the move, then the scores remains the same
   - AG (is_playing IMPLIES FORALL dir: AX (NOT board_changed_from_prev IMPLIES score_unchanged_from_prev))
 - board_sum_increases_only_with_new_cell <- If the game is being played, and the user made a move in a given direction, and the board changed, then the difference in the sum of the cells is 2 or 4 (with 90/10% probability)
-  - AG (is_playing IMPLIES FORALL dir: AX (board_changed_from_prev IMPLIES (SumOfCells(current) - SumOfCells(prev) = 2 OR SumOfCells(current) - SumOfCells(prev) = 4)))
+  - AG (is_playing IMPLIES FORALL dir: AX (board_changed_from_prev IMPLIES sum_of_cells_diff_is_2_or_4))
   - can't express probaility with formula so left to AI
 - score_only_increases <- the current score never decreases
   - AG (AX score_not_decreased_from_prev)
